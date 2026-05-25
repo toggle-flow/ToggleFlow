@@ -72,6 +72,19 @@
     "emptyTitle": "No other users yet",
     "emptyDescription": "Invite team members and assign roles to control their access."
   },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account preferences",
+    "appearance": "Appearance",
+    "appearanceDescription": "Choose how ToggleFlow looks for you",
+    "language": "Language",
+    "languageDescription": "Select your preferred language",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
   "lang": {
     "label": "Language",
     "en": "English",

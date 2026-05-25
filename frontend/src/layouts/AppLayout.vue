@@ -28,10 +28,19 @@
 
       <!-- User footer -->
       <div class="border-t p-2 space-y-0.5">
-        <div class="px-2 py-1.5">
-          <p class="text-xs font-medium text-sidebar-foreground truncate">{{ authStore.user?.name }}</p>
-          <p class="text-xs text-sidebar-foreground/50">{{ $t(`roles.${authStore.user?.role}`) }}</p>
-        </div>
+        <button
+          class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors"
+          :class="isActive('/settings')
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'"
+          @click="router.push('/settings')"
+        >
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium truncate">{{ authStore.user?.name }}</p>
+            <p class="text-xs opacity-50">{{ $t(`roles.${authStore.user?.role}`) }}</p>
+          </div>
+          <Settings class="size-3.5 shrink-0 opacity-50" />
+        </button>
         <button
           class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           @click="signOut"
@@ -55,7 +64,7 @@
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ToggleRight, Flag, Globe, ClipboardList, Users, LogOut } from '@lucide/vue'
+import { ToggleRight, Flag, Globe, ClipboardList, Users, LogOut, Settings } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()

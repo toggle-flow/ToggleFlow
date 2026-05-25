@@ -72,6 +72,19 @@
     "emptyTitle": "Noch keine weiteren Benutzer",
     "emptyDescription": "Laden Sie Teammitglieder ein und weisen Sie Rollen zu, um den Zugriff zu steuern."
   },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Kontopräferenzen verwalten",
+    "appearance": "Darstellung",
+    "appearanceDescription": "Wählen Sie, wie ToggleFlow für Sie aussieht",
+    "language": "Sprache",
+    "languageDescription": "Bevorzugte Sprache auswählen",
+    "theme": {
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    }
+  },
   "lang": {
     "label": "Sprache",
     "en": "Englisch",
