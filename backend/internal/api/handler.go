@@ -18,10 +18,6 @@ func (h *handler) Health(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "ok"})
 }
 
-// --- Projects ---
-func (h *handler) CreateProject(c *fiber.Ctx) error  { return stub(c) }
-func (h *handler) ListProjects(c *fiber.Ctx) error   { return stub(c) }
-
 // --- Environments ---
 func (h *handler) CreateEnvironment(c *fiber.Ctx) error { return stub(c) }
 func (h *handler) ListEnvironments(c *fiber.Ctx) error  { return stub(c) }

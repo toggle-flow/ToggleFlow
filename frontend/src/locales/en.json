@@ -45,6 +45,18 @@
     "editor": "Editor",
     "viewer": "Viewer"
   },
+  "projects": {
+    "select": "Select project",
+    "new": "New project",
+    "createTitle": "Create project",
+    "createDescription": "Projects group your feature flags and environments.",
+    "name": "Name",
+    "namePlaceholder": "My project",
+    "create": "Create project",
+    "creating": "Creating...",
+    "noProject": "No project selected",
+    "noProjectDescription": "Select a project from the sidebar or create a new one to get started."
+  },
   "flags": {
     "title": "Feature Flags",
     "subtitle": "Manage flags across all environments",
@@ -84,6 +96,9 @@
       "dark": "Dark",
       "system": "System"
     }
+  },
+  "common": {
+    "cancel": "Cancel"
   },
   "lang": {
     "label": "Language",

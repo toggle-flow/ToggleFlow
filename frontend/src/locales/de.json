@@ -45,6 +45,18 @@
     "editor": "Bearbeiter",
     "viewer": "Betrachter"
   },
+  "projects": {
+    "select": "Projekt auswählen",
+    "new": "Neues Projekt",
+    "createTitle": "Projekt erstellen",
+    "createDescription": "Projekte gruppieren Ihre Feature-Flags und Umgebungen.",
+    "name": "Name",
+    "namePlaceholder": "Mein Projekt",
+    "create": "Projekt erstellen",
+    "creating": "Wird erstellt...",
+    "noProject": "Kein Projekt ausgewählt",
+    "noProjectDescription": "Wählen Sie ein Projekt aus der Seitenleiste oder erstellen Sie ein neues."
+  },
   "flags": {
     "title": "Feature-Flags",
     "subtitle": "Feature-Flags in allen Umgebungen verwalten",
@@ -84,6 +96,9 @@
       "dark": "Dunkel",
       "system": "System"
     }
+  },
+  "common": {
+    "cancel": "Abbrechen"
   },
   "lang": {
     "label": "Sprache",

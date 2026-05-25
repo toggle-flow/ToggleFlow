@@ -63,9 +63,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Menu, ToggleRight } from '@lucide/vue'
 import SidebarNav from './SidebarNav.vue'
+import { projectsApi } from '@/api/projects'
+import { useProjectStore } from '@/stores/project'
 
 const drawerOpen = ref(false)
+const projectStore = useProjectStore()
+
+onMounted(async () => {
+  try {
+    const list = await projectsApi.list()
+    projectStore.setProjects(list)
+  } catch {
+    // user may not have permission — leave empty
+  }
+})
 </script>
