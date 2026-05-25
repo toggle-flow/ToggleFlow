@@ -1,0 +1,39 @@
+{
+  "brand": {
+    "tagline": "Schneller liefern. Smarter steuern.",
+    "description": "Self-hosted Feature-Flags mit Targeting-Regeln, schrittweisen Rollouts und Echtzeit-Updates — alles in einem Container.",
+    "footer": "Open Source · Self-hostable · Single Container",
+    "features": {
+      "targeting": "Targeting-Regeln & prozentuale Rollouts",
+      "realtime": "Echtzeit-Updates via SSE-Stream",
+      "rbac": "Rollenbasierte Zugriffskontrolle"
+    }
+  },
+  "setup": {
+    "title": "Willkommen bei ToggleFlow",
+    "subtitle": "Erstellen Sie Ihr Superuser-Konto. Dieses Konto hat volle Kontrolle über Benutzer, Rollen und alle Projekte.",
+    "name": "Name",
+    "namePlaceholder": "Ihr Name",
+    "email": "E-Mail",
+    "emailPlaceholder": "sie{'@'}unternehmen.de",
+    "password": "Passwort",
+    "passwordPlaceholder": "Mind. 8 Zeichen",
+    "submit": "Superuser-Konto erstellen",
+    "submitting": "Konto wird erstellt..."
+  },
+  "login": {
+    "title": "ToggleFlow",
+    "subtitle": "Melden Sie sich an",
+    "email": "E-Mail",
+    "emailPlaceholder": "sie{'@'}unternehmen.de",
+    "password": "Passwort",
+    "passwordPlaceholder": "Ihr Passwort",
+    "submit": "Anmelden",
+    "submitting": "Anmeldung läuft..."
+  },
+  "lang": {
+    "label": "Sprache",
+    "en": "Englisch",
+    "de": "Deutsch"
+  }
+}

@@ -1,8 +1,10 @@
 import { createI18n } from 'vue-i18n'
+import en from '@/locales/en.json'
+import de from '@/locales/de.json'
 
 export type Locale = 'en' | 'de'
 
-const SUPPORTED_LOCALES: Locale[] = ['en', 'de']
+export const SUPPORTED_LOCALES: Locale[] = ['en', 'de']
 
 function detectLocale(): Locale {
   const saved = localStorage.getItem('locale')
@@ -16,7 +18,7 @@ const i18n = createI18n({
   legacy: false,
   locale: detectLocale(),
   fallbackLocale: 'en',
-  messages: {},
+  messages: { en, de },
 })
 
 export function setLocale(locale: Locale) {
@@ -29,5 +31,4 @@ export function getLocale(): Locale {
   return (i18n.global.locale as { value: string }).value as Locale
 }
 
-export { SUPPORTED_LOCALES }
 export default i18n

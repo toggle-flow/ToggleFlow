@@ -1,0 +1,39 @@
+{
+  "brand": {
+    "tagline": "Ship faster. Control better.",
+    "description": "Self-hosted feature flags with targeting rules, gradual rollouts, and real-time updates — all in one container.",
+    "footer": "Open Source · Self-hostable · Single Container",
+    "features": {
+      "targeting": "Targeting rules & percentage rollouts",
+      "realtime": "Real-time updates via SSE stream",
+      "rbac": "Role-based access control"
+    }
+  },
+  "setup": {
+    "title": "Welcome to ToggleFlow",
+    "subtitle": "Create your superuser account. This account has full control over users, roles, and all projects.",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "you{'@'}company.com",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "submit": "Create superuser account",
+    "submitting": "Creating account..."
+  },
+  "login": {
+    "title": "ToggleFlow",
+    "subtitle": "Sign in to your account",
+    "email": "Email",
+    "emailPlaceholder": "you{'@'}company.com",
+    "password": "Password",
+    "passwordPlaceholder": "Your password",
+    "submit": "Sign in",
+    "submitting": "Signing in..."
+  },
+  "lang": {
+    "label": "Language",
+    "en": "English",
+    "de": "German"
+  }
+}
