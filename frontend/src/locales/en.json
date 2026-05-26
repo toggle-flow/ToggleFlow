@@ -115,6 +115,7 @@
     "createDescription": "Environments let you run the same flags independently across dev, staging, and prod.",
     "name": "Name",
     "namePlaceholder": "Production",
+    "key": "Key",
     "emptyTitle": "No environments yet",
     "emptyDescription": "Environments let you control flag states independently across dev, staging, and prod.",
     "sdkKey": "SDK Key",

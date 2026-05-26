@@ -3,7 +3,7 @@
     <DialogContent class="sm:max-w-sm">
       <DialogHeader>
         <DialogTitle>Edit environment</DialogTitle>
-        <DialogDescription>Update the environment name or description.</DialogDescription>
+        <DialogDescription>Update the environment name, key, or description.</DialogDescription>
       </DialogHeader>
 
       <form class="space-y-3" @submit.prevent="submit">
@@ -16,6 +16,18 @@
             class="mt-2"
             required
             autofocus
+          />
+        </div>
+
+        <div class="space-y-2">
+          <Label for="edit-env-key">{{ $t('environments.key') }}</Label>
+          <Input
+            id="edit-env-key"
+            v-model="key"
+            placeholder="production"
+            class="mt-2 font-mono"
+            required
+            @focus="keyTouched = true"
           />
         </div>
 
@@ -49,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { AlertCircle, Loader2 } from '@lucide/vue'
 import {
   Dialog,
@@ -72,15 +84,37 @@ const emit = defineEmits<{
 }>()
 
 const name = ref('')
+const keyRaw = ref('')
+const keyTouched = ref(false)
 const description = ref('')
 const loading = ref(false)
 const error = ref('')
+
+const key = computed({
+  get: () => keyRaw.value,
+  set: (v: string) => {
+    keyRaw.value = v.toLowerCase().replace(/[^a-z0-9-]/g, '')
+  },
+})
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+watch(name, (v: string) => {
+  if (!keyTouched.value) keyRaw.value = slugify(v)
+})
 
 watch(
   () => props.open,
   (v) => {
     if (v && props.environment) {
       name.value = props.environment.name
+      keyRaw.value = props.environment.key
+      keyTouched.value = false
       description.value = props.environment.description
       error.value = ''
     }
@@ -96,6 +130,7 @@ async function submit() {
       props.projectId,
       props.environment.id,
       name.value,
+      key.value,
       description.value
     )
     emit('updated', updated)

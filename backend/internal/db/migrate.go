@@ -39,6 +39,7 @@ func Migrate(db *bun.DB) error {
 		`ALTER TABLE projects ADD COLUMN description TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE environments ADD COLUMN description TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE environments ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+		`ALTER TABLE environments RENAME COLUMN slug TO key`,
 	} {
 		_, _ = db.ExecContext(ctx, stmt)
 	}

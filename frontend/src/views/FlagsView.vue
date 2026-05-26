@@ -1,166 +1,176 @@
 <template>
-  <div class="p-6 space-y-4">
-    <template v-if="!projectStore.current">
-      <div class="flex flex-col items-center justify-center py-24 text-center">
-        <FolderOpen class="size-8 text-muted-foreground/30 mb-3" />
-        <p class="text-sm font-medium">{{ $t('projects.noProject') }}</p>
-        <p class="mt-1 text-xs text-muted-foreground max-w-xs">
-          {{ $t('projects.noProjectDescription') }}
-        </p>
-      </div>
-    </template>
+  <div class="flex h-full flex-col overflow-hidden">
+    <!-- No project selected -->
+    <div
+      v-if="!projectStore.current"
+      class="flex flex-1 flex-col items-center justify-center text-center"
+    >
+      <FolderOpen class="size-8 text-muted-foreground/30 mb-3" />
+      <p class="text-sm font-medium">{{ $t('projects.noProject') }}</p>
+      <p class="mt-1 text-xs text-muted-foreground max-w-xs">
+        {{ $t('projects.noProjectDescription') }}
+      </p>
+    </div>
 
     <template v-else>
-      <div class="flex items-center justify-between">
-        <div class="space-y-0.5">
-          <h1 class="text-base font-semibold">{{ $t('flags.title') }}</h1>
-          <p class="text-sm text-muted-foreground">{{ $t('flags.subtitle') }}</p>
+      <!-- Fixed header -->
+      <div class="shrink-0 space-y-4 px-6 pt-6 pb-4">
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <h1 class="text-base font-semibold">{{ $t('flags.title') }}</h1>
+            <p class="text-sm text-muted-foreground">{{ $t('flags.subtitle') }}</p>
+          </div>
+          <Button size="sm" @click="createDialogOpen = true">
+            <Plus class="size-3.5" />
+            {{ $t('flags.create') }}
+          </Button>
         </div>
-        <Button size="sm" @click="createDialogOpen = true">
-          <Plus class="size-3.5" />
-          {{ $t('flags.create') }}
-        </Button>
+
+        <Separator />
+
+        <div class="relative">
+          <Search
+            class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+          />
+          <Input v-model="search" placeholder="Search flags..." class="pl-8" />
+        </div>
       </div>
 
-      <Separator />
+      <!-- Scrollable body + pinned pagination -->
+      <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">
+        <div v-if="loading" class="flex flex-1 items-center justify-center">
+          <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
+        </div>
 
-      <div class="relative">
-        <Search
-          class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
-        />
-        <Input v-model="search" placeholder="Search flags..." class="pl-8" />
-      </div>
+        <div
+          v-else-if="flags.length === 0 && search"
+          class="flex flex-1 flex-col items-center justify-center text-center"
+        >
+          <SearchX class="size-8 text-muted-foreground/30 mb-3" />
+          <p class="text-sm font-medium">No flags match your search</p>
+        </div>
 
-      <div v-if="loading" class="flex flex-col items-center justify-center py-24">
-        <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
-      </div>
+        <div
+          v-else-if="total === 0"
+          class="flex flex-1 flex-col items-center justify-center text-center"
+        >
+          <FlagIcon class="size-8 text-muted-foreground/30 mb-3" />
+          <p class="text-sm font-medium">{{ $t('flags.emptyTitle') }}</p>
+          <p class="mt-1 text-xs text-muted-foreground max-w-xs">
+            {{ $t('flags.emptyDescription') }}
+          </p>
+        </div>
 
-      <div
-        v-else-if="flags.length === 0 && search"
-        class="flex flex-col items-center justify-center py-24 text-center"
-      >
-        <SearchX class="size-8 text-muted-foreground/30 mb-3" />
-        <p class="text-sm font-medium">No flags match your search</p>
-      </div>
+        <template v-else>
+          <div class="min-h-0 flex-1 overflow-y-auto space-y-2">
+            <div v-for="flag in flags" :key="flag.id" class="rounded-lg border bg-card p-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                  <!-- Name + type badge + key -->
+                  <div class="flex flex-wrap items-center gap-2">
+                    <p class="text-sm font-medium leading-none">{{ flag.name }}</p>
+                    <span
+                      class="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                    >
+                      {{ flag.flag_type }}
+                    </span>
+                    <span class="font-mono text-[11px] text-muted-foreground">{{ flag.key }}</span>
+                  </div>
 
-      <div
-        v-else-if="total === 0"
-        class="flex flex-col items-center justify-center py-24 text-center"
-      >
-        <FlagIcon class="size-8 text-muted-foreground/30 mb-3" />
-        <p class="text-sm font-medium">{{ $t('flags.emptyTitle') }}</p>
-        <p class="mt-1 text-xs text-muted-foreground max-w-xs">
-          {{ $t('flags.emptyDescription') }}
-        </p>
-      </div>
+                  <p v-if="flag.description" class="mt-1 text-xs text-muted-foreground">
+                    {{ flag.description }}
+                  </p>
 
-      <template v-else>
-        <div class="space-y-2">
-          <div v-for="flag in flags" :key="flag.id" class="rounded-lg border bg-card p-4">
-            <div class="flex items-start justify-between gap-4">
-              <div class="min-w-0 flex-1">
-                <!-- Name + type badge + key -->
-                <div class="flex flex-wrap items-center gap-2">
-                  <p class="text-sm font-medium leading-none">{{ flag.name }}</p>
-                  <span
-                    class="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                  >
-                    {{ flag.flag_type }}
-                  </span>
-                  <span class="font-mono text-[11px] text-muted-foreground">{{ flag.key }}</span>
+                  <!-- Variation chips -->
+                  <div v-if="flag.variations.length" class="mt-2 flex flex-wrap gap-1">
+                    <span
+                      v-for="(v, i) in flag.variations"
+                      :key="i"
+                      class="rounded border bg-muted/40 px-1.5 py-0.5 text-[10px] font-mono"
+                    >
+                      {{ v.name }}:
+                      <span class="text-muted-foreground">{{ formatValue(v.value) }}</span>
+                    </span>
+                  </div>
                 </div>
 
-                <p v-if="flag.description" class="mt-1 text-xs text-muted-foreground">
-                  {{ flag.description }}
-                </p>
-
-                <!-- Variation chips -->
-                <div v-if="flag.variations.length" class="mt-2 flex flex-wrap gap-1">
-                  <span
-                    v-for="(v, i) in flag.variations"
-                    :key="i"
-                    class="rounded border bg-muted/40 px-1.5 py-0.5 text-[10px] font-mono"
+                <!-- Actions -->
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    @click="openEdit(flag)"
                   >
-                    {{ v.name }}:
-                    <span class="text-muted-foreground">{{ formatValue(v.value) }}</span>
-                  </span>
+                    <Pencil class="size-3.5" />
+                  </button>
+                  <button
+                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    @click="openDelete(flag)"
+                  >
+                    <Trash2 class="size-3.5" />
+                  </button>
                 </div>
               </div>
 
-              <!-- Actions -->
-              <div class="flex items-center gap-1 shrink-0">
-                <button
-                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  @click="openEdit(flag)"
-                >
-                  <Pencil class="size-3.5" />
-                </button>
-                <button
-                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  @click="openDelete(flag)"
-                >
-                  <Trash2 class="size-3.5" />
-                </button>
-              </div>
-            </div>
-
-            <!-- Environment toggles -->
-            <div
-              v-if="flag.environments.length > 0"
-              class="mt-3 flex flex-wrap gap-x-6 gap-y-2 border-t pt-3"
-            >
+              <!-- Environment toggles -->
               <div
-                v-for="env in flag.environments"
-                :key="env.environment_id"
-                class="flex items-center gap-2"
+                v-if="flag.environments.length > 0"
+                class="mt-3 flex flex-wrap gap-x-6 gap-y-2 border-t pt-3"
               >
-                <button
-                  class="relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none disabled:pointer-events-none"
-                  :class="env.enabled ? 'bg-primary' : 'bg-input'"
-                  :disabled="toggling[toggleKey(flag.id, env.environment_id)]"
-                  @click="toggle(flag, env)"
+                <div
+                  v-for="env in flag.environments"
+                  :key="env.environment_id"
+                  class="flex items-center gap-2"
                 >
-                  <span
-                    class="pointer-events-none block h-3.5 w-3.5 rounded-full bg-background shadow-sm ring-0 transition-transform"
-                    :class="env.enabled ? 'translate-x-3' : 'translate-x-0'"
-                  />
-                </button>
-                <span class="text-xs text-muted-foreground">{{ env.environment_name }}</span>
-                <!-- Default variation selector -->
-                <select
-                  v-if="flag.variations.length > 1"
-                  :value="env.default_variation"
-                  class="rounded border border-input bg-background px-1.5 py-0.5 text-[11px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                  @change="changeDefaultVariation(flag, env, $event)"
-                >
-                  <option v-for="(v, i) in flag.variations" :key="i" :value="i">
-                    {{ v.name }}
-                  </option>
-                </select>
+                  <button
+                    class="relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none disabled:pointer-events-none"
+                    :class="env.enabled ? 'bg-primary' : 'bg-input'"
+                    :disabled="toggling[toggleKey(flag.id, env.environment_id)]"
+                    @click="toggle(flag, env)"
+                  >
+                    <span
+                      class="pointer-events-none block h-3.5 w-3.5 rounded-full bg-background shadow-sm ring-0 transition-transform"
+                      :class="env.enabled ? 'translate-x-3' : 'translate-x-0'"
+                    />
+                  </button>
+                  <span class="text-xs text-muted-foreground">{{ env.environment_name }}</span>
+                  <!-- Default variation selector -->
+                  <select
+                    v-if="flag.variations.length > 1"
+                    :value="env.default_variation"
+                    class="rounded border border-input bg-background px-1.5 py-0.5 text-[11px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    @change="changeDefaultVariation(flag, env, $event)"
+                  >
+                    <option v-for="(v, i) in flag.variations" :key="i" :value="i">
+                      {{ v.name }}
+                    </option>
+                  </select>
+                </div>
               </div>
-            </div>
-            <p v-else class="mt-3 text-xs text-muted-foreground border-t pt-3">
-              {{ $t('flags.noEnvironments') }}
-            </p>
+              <p v-else class="mt-3 text-xs text-muted-foreground border-t pt-3">
+                {{ $t('flags.noEnvironments') }}
+              </p>
 
-            <!-- Metadata -->
-            <div
-              class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-3 text-xs text-muted-foreground"
-            >
-              <span class="flex items-center gap-1">
-                <CalendarDays class="size-3 shrink-0" />
-                {{ timeAgo(flag.created_at) }}
-              </span>
-              <span class="flex items-center gap-1">
-                <Clock class="size-3 shrink-0" />
-                {{ timeAgo(flag.updated_at) }}
-              </span>
+              <!-- Metadata -->
+              <div
+                class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-3 text-xs text-muted-foreground"
+              >
+                <span class="flex items-center gap-1">
+                  <CalendarDays class="size-3 shrink-0" />
+                  {{ timeAgo(flag.created_at) }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <Clock class="size-3 shrink-0" />
+                  {{ timeAgo(flag.updated_at) }}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <Pagination :page="page" :total="total" :limit="limit" @change="goTo" />
-      </template>
+          <div class="shrink-0 pt-4">
+            <Pagination :page="page" :total="total" :limit="limit" @change="goTo" />
+          </div>
+        </template>
+      </div>
     </template>
   </div>
 

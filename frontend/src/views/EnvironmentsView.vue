@@ -1,88 +1,101 @@
 <template>
-  <div class="p-6 space-y-4">
-    <template v-if="!projectStore.current">
-      <div class="flex flex-col items-center justify-center py-24 text-center">
-        <FolderOpen class="size-8 text-muted-foreground/30 mb-3" />
-        <p class="text-sm font-medium">{{ $t('projects.noProject') }}</p>
-        <p class="mt-1 text-xs text-muted-foreground max-w-xs">
-          {{ $t('projects.noProjectDescription') }}
-        </p>
-      </div>
-    </template>
+  <div class="flex h-full flex-col overflow-hidden">
+    <!-- No project selected -->
+    <div
+      v-if="!projectStore.current"
+      class="flex flex-1 flex-col items-center justify-center text-center"
+    >
+      <FolderOpen class="size-8 text-muted-foreground/30 mb-3" />
+      <p class="text-sm font-medium">{{ $t('projects.noProject') }}</p>
+      <p class="mt-1 text-xs text-muted-foreground max-w-xs">
+        {{ $t('projects.noProjectDescription') }}
+      </p>
+    </div>
 
     <template v-else>
-      <div class="flex items-center justify-between">
-        <div class="space-y-0.5">
-          <h1 class="text-base font-semibold">{{ $t('environments.title') }}</h1>
-          <p class="text-sm text-muted-foreground">{{ $t('environments.subtitle') }}</p>
-        </div>
-        <Button size="sm" @click="createDialogOpen = true">
-          <Plus class="size-3.5" />
-          {{ $t('environments.create') }}
-        </Button>
-      </div>
-
-      <Separator />
-
-      <div v-if="loading" class="flex flex-col items-center justify-center py-24 text-center">
-        <Loader2 class="size-6 animate-spin text-muted-foreground/40 mb-3" />
-      </div>
-
-      <div
-        v-else-if="environments.length === 0"
-        class="flex flex-col items-center justify-center py-24 text-center"
-      >
-        <Globe class="size-8 text-muted-foreground/30 mb-3" />
-        <p class="text-sm font-medium">{{ $t('environments.emptyTitle') }}</p>
-        <p class="mt-1 text-xs text-muted-foreground max-w-xs">
-          {{ $t('environments.emptyDescription') }}
-        </p>
-      </div>
-
-      <div v-else class="space-y-2">
-        <div
-          v-for="env in environments"
-          :key="env.id"
-          class="rounded-lg border bg-card p-4 space-y-3"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <p class="text-sm font-medium leading-none">{{ env.name }}</p>
-                <span
-                  class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
-                  >{{ env.slug }}</span
-                >
-              </div>
-              <p v-if="env.description" class="mt-1 text-xs text-muted-foreground">
-                {{ env.description }}
-              </p>
-            </div>
-            <div class="flex items-center gap-1 shrink-0">
-              <button
-                class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                @click="openEdit(env)"
-              >
-                <Pencil class="size-3.5" />
-              </button>
-              <button
-                class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                @click="openDelete(env)"
-              >
-                <Trash2 class="size-3.5" />
-              </button>
-            </div>
+      <!-- Fixed header -->
+      <div class="shrink-0 space-y-4 px-6 pt-6 pb-4">
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <h1 class="text-base font-semibold">{{ $t('environments.title') }}</h1>
+            <p class="text-sm text-muted-foreground">{{ $t('environments.subtitle') }}</p>
           </div>
+          <Button size="sm" @click="createDialogOpen = true">
+            <Plus class="size-3.5" />
+            {{ $t('environments.create') }}
+          </Button>
+        </div>
 
-          <div class="flex items-center gap-2">
-            <div class="flex-1 min-w-0 rounded-md border bg-muted/40 px-3 py-1.5">
-              <p class="text-xs font-mono truncate text-muted-foreground">{{ env.sdk_key }}</p>
+        <Separator />
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+        <div v-if="loading" class="flex h-full items-center justify-center">
+          <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
+        </div>
+
+        <div
+          v-else-if="environments.length === 0"
+          class="flex h-full flex-col items-center justify-center text-center"
+        >
+          <Globe class="size-8 text-muted-foreground/30 mb-3" />
+          <p class="text-sm font-medium">{{ $t('environments.emptyTitle') }}</p>
+          <p class="mt-1 text-xs text-muted-foreground max-w-xs">
+            {{ $t('environments.emptyDescription') }}
+          </p>
+        </div>
+
+        <div v-else class="space-y-2">
+          <div
+            v-for="env in environments"
+            :key="env.id"
+            class="rounded-lg border bg-card p-4 space-y-3"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="text-sm font-medium leading-none">{{ env.name }}</p>
+                  <span
+                    class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                    >{{ env.key }}</span
+                  >
+                </div>
+                <p v-if="env.description" class="mt-1 text-xs text-muted-foreground">
+                  {{ env.description }}
+                </p>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <button
+                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  @click="openEdit(env)"
+                >
+                  <Pencil class="size-3.5" />
+                </button>
+                <button
+                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  @click="openDelete(env)"
+                >
+                  <Trash2 class="size-3.5" />
+                </button>
+              </div>
             </div>
-            <Button size="sm" variant="outline" class="shrink-0" @click="copy(env.sdk_key, env.id)">
-              <Check v-if="copiedId === env.id" class="size-3.5 text-green-500" />
-              <Copy v-else class="size-3.5" />
-              {{ copiedId === env.id ? $t('environments.copied') : $t('environments.sdkKey') }}
-            </Button>
+
+            <div class="flex items-center gap-2">
+              <div class="flex-1 min-w-0 rounded-md border bg-muted/40 px-3 py-1.5">
+                <p class="text-xs font-mono truncate text-muted-foreground">{{ env.sdk_key }}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                class="shrink-0"
+                @click="copy(env.sdk_key, env.id)"
+              >
+                <Check v-if="copiedId === env.id" class="size-3.5 text-green-500" />
+                <Copy v-else class="size-3.5" />
+                {{ copiedId === env.id ? $t('environments.copied') : $t('environments.sdkKey') }}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

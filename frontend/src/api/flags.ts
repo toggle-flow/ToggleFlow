@@ -10,7 +10,7 @@ export interface Variation {
 export interface FlagEnvState {
   environment_id: number
   environment_name: string
-  environment_slug: string
+  environment_key: string
   enabled: boolean
   default_variation: number
 }

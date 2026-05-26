@@ -25,7 +25,7 @@ type Environment struct {
 	ID            int64     `bun:"id,pk,autoincrement"                          json:"id"`
 	ProjectID     int64     `bun:"project_id,notnull"                           json:"project_id"`
 	Name          string    `bun:"name,notnull"                                 json:"name"`
-	Slug          string    `bun:"slug,notnull"                                 json:"slug"`
+	Key           string    `bun:"key,notnull"                                  json:"key"`
 	Description   string    `bun:"description,notnull,default:''"               json:"description"`
 	SDKKey        string    `bun:"sdk_key,notnull,unique"                       json:"sdk_key"`
 	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`

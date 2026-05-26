@@ -115,6 +115,7 @@
     "createDescription": "Umgebungen ermöglichen die unabhängige Steuerung von Flag-Zuständen über dev, staging und prod.",
     "name": "Name",
     "namePlaceholder": "Produktion",
+    "key": "Schlüssel",
     "emptyTitle": "Noch keine Umgebungen",
     "emptyDescription": "Umgebungen ermöglichen die unabhängige Steuerung von Flag-Zuständen über dev, staging und prod.",
     "sdkKey": "SDK-Schlüssel",

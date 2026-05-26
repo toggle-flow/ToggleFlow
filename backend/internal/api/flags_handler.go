@@ -30,7 +30,7 @@ type Variation struct {
 type FlagEnvState struct {
 	EnvironmentID    int64  `json:"environment_id"`
 	EnvironmentName  string `json:"environment_name"`
-	EnvironmentSlug  string `json:"environment_slug"`
+	EnvironmentKey   string `json:"environment_key"`
 	Enabled          bool   `json:"enabled"`
 	DefaultVariation int    `json:"default_variation"`
 }
@@ -129,7 +129,7 @@ func (h *handler) ListFlags(c *fiber.Ctx) error {
 				states[j] = FlagEnvState{
 					EnvironmentID:    env.ID,
 					EnvironmentName:  env.Name,
-					EnvironmentSlug:  env.Slug,
+					EnvironmentKey:   env.Key,
 					Enabled:          s.enabled,
 					DefaultVariation: s.defaultVariation,
 				}

@@ -1,103 +1,111 @@
 <template>
-  <div class="p-6 space-y-4">
-    <div class="flex items-center justify-between">
-      <div class="space-y-0.5">
-        <h1 class="text-base font-semibold">{{ $t('nav.projects') }}</h1>
-        <p class="text-sm text-muted-foreground">{{ $t('projects.subtitle') }}</p>
+  <div class="flex h-full flex-col overflow-hidden">
+    <!-- Fixed header -->
+    <div class="shrink-0 space-y-4 px-6 pt-6 pb-4">
+      <div class="flex items-center justify-between">
+        <div class="space-y-0.5">
+          <h1 class="text-base font-semibold">{{ $t('nav.projects') }}</h1>
+          <p class="text-sm text-muted-foreground">{{ $t('projects.subtitle') }}</p>
+        </div>
+        <Button size="sm" @click="createDialogOpen = true">
+          <Plus class="size-3.5" />
+          {{ $t('projects.new') }}
+        </Button>
       </div>
-      <Button size="sm" @click="createDialogOpen = true">
-        <Plus class="size-3.5" />
-        {{ $t('projects.new') }}
-      </Button>
+
+      <Separator />
+
+      <div class="relative">
+        <Search
+          class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+        />
+        <Input v-model="search" :placeholder="$t('projects.search')" class="pl-8" />
+      </div>
     </div>
 
-    <Separator />
+    <!-- Scrollable body + pinned pagination -->
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">
+      <div v-if="loading" class="flex flex-1 items-center justify-center">
+        <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
+      </div>
 
-    <div class="relative">
-      <Search
-        class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
-      />
-      <Input v-model="search" :placeholder="$t('projects.search')" class="pl-8" />
-    </div>
+      <div
+        v-else-if="projects.length === 0 && search"
+        class="flex flex-1 flex-col items-center justify-center text-center"
+      >
+        <SearchX class="size-8 text-muted-foreground/30 mb-3" />
+        <p class="text-sm font-medium">{{ $t('projects.noResults') }}</p>
+      </div>
 
-    <div v-if="loading" class="flex flex-col items-center justify-center py-24">
-      <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
-    </div>
+      <div
+        v-else-if="total === 0"
+        class="flex flex-1 flex-col items-center justify-center text-center"
+      >
+        <FolderOpen class="size-8 text-muted-foreground/30 mb-3" />
+        <p class="text-sm font-medium">{{ $t('projects.emptyTitle') }}</p>
+        <p class="mt-1 text-xs text-muted-foreground max-w-xs">
+          {{ $t('projects.emptyDescription') }}
+        </p>
+      </div>
 
-    <div
-      v-else-if="projects.length === 0 && search"
-      class="flex flex-col items-center justify-center py-24 text-center"
-    >
-      <SearchX class="size-8 text-muted-foreground/30 mb-3" />
-      <p class="text-sm font-medium">{{ $t('projects.noResults') }}</p>
-    </div>
-
-    <div
-      v-else-if="total === 0"
-      class="flex flex-col items-center justify-center py-24 text-center"
-    >
-      <FolderOpen class="size-8 text-muted-foreground/30 mb-3" />
-      <p class="text-sm font-medium">{{ $t('projects.emptyTitle') }}</p>
-      <p class="mt-1 text-xs text-muted-foreground max-w-xs">
-        {{ $t('projects.emptyDescription') }}
-      </p>
-    </div>
-
-    <template v-else>
-      <div class="space-y-2">
-        <div v-for="project in projects" :key="project.id" class="rounded-lg border bg-card p-4">
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <p class="text-sm font-medium leading-none">{{ project.name }}</p>
-                <span
-                  class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
-                  >{{ project.key }}</span
-                >
-              </div>
-              <p v-if="project.description" class="mt-1 text-xs text-muted-foreground">
-                {{ project.description }}
-              </p>
-              <div
-                class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
-              >
-                <span class="flex items-center gap-1.5">
+      <template v-else>
+        <div class="min-h-0 flex-1 overflow-y-auto space-y-2">
+          <div v-for="project in projects" :key="project.id" class="rounded-lg border bg-card p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="text-sm font-medium leading-none">{{ project.name }}</p>
                   <span
-                    class="flex size-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold uppercase"
-                    >{{ project.created_by_name ? project.created_by_name[0] : '?' }}</span
+                    class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                    >{{ project.key }}</span
                   >
-                  {{ project.created_by_name || '—' }}
-                </span>
-                <span class="flex items-center gap-1">
-                  <CalendarDays class="size-3 shrink-0" />
-                  {{ timeAgo(project.created_at) }}
-                </span>
-                <span class="flex items-center gap-1">
-                  <Clock class="size-3 shrink-0" />
-                  {{ timeAgo(project.updated_at) }}
-                </span>
+                </div>
+                <p v-if="project.description" class="mt-1 text-xs text-muted-foreground">
+                  {{ project.description }}
+                </p>
+                <div
+                  class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
+                >
+                  <span class="flex items-center gap-1.5">
+                    <span
+                      class="flex size-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold uppercase"
+                      >{{ project.created_by_name ? project.created_by_name[0] : '?' }}</span
+                    >
+                    {{ project.created_by_name || '—' }}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <CalendarDays class="size-3 shrink-0" />
+                    {{ timeAgo(project.created_at) }}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <Clock class="size-3 shrink-0" />
+                    {{ timeAgo(project.updated_at) }}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div class="flex items-center gap-1 shrink-0">
-              <button
-                class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                @click="openEdit(project)"
-              >
-                <Pencil class="size-3.5" />
-              </button>
-              <button
-                class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                @click="openDelete(project)"
-              >
-                <Trash2 class="size-3.5" />
-              </button>
+              <div class="flex items-center gap-1 shrink-0">
+                <button
+                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  @click="openEdit(project)"
+                >
+                  <Pencil class="size-3.5" />
+                </button>
+                <button
+                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  @click="openDelete(project)"
+                >
+                  <Trash2 class="size-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <Pagination :page="page" :total="total" :limit="limit" @change="goTo" />
-    </template>
+        <div class="shrink-0 pt-4">
+          <Pagination :page="page" :total="total" :limit="limit" @change="goTo" />
+        </div>
+      </template>
+    </div>
   </div>
 
   <CreateProjectDialog v-model:open="createDialogOpen" @created="onCreated" />
@@ -164,7 +172,6 @@ async function load() {
   }
 }
 
-// Debounce search — like debounceTime(300) in RxJS
 watchDebounced(
   search,
   () => {
@@ -174,7 +181,6 @@ watchDebounced(
   { debounce: 300 }
 )
 
-// Reload when sidebar creates a project
 watch(() => projectStore.projects.length, load)
 load()
 

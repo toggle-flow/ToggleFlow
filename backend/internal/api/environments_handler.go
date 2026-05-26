@@ -42,6 +42,7 @@ func (h *handler) ListEnvironments(c *fiber.Ctx) error {
 
 type createEnvironmentRequest struct {
 	Name        string `json:"name"`
+	Key         string `json:"key"`
 	Description string `json:"description"`
 }
 
@@ -64,10 +65,15 @@ func (h *handler) CreateEnvironment(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to generate sdk key"})
 	}
 
+	key := req.Key
+	if key == "" {
+		key = slugify(req.Name)
+	}
+
 	env := &db.Environment{
 		ProjectID:   pid,
 		Name:        req.Name,
-		Slug:        slugify(req.Name),
+		Key:         key,
 		Description: req.Description,
 		SDKKey:      sdkKey,
 		CreatedAt:   time.Now(),
@@ -86,6 +92,7 @@ func (h *handler) CreateEnvironment(c *fiber.Ctx) error {
 
 type updateEnvironmentRequest struct {
 	Name        string `json:"name"`
+	Key         string `json:"key"`
 	Description string `json:"description"`
 }
 
@@ -110,10 +117,11 @@ func (h *handler) UpdateEnvironment(c *fiber.Ctx) error {
 	}
 
 	env.Name = req.Name
+	env.Key = req.Key
 	env.Description = req.Description
 	env.UpdatedAt = time.Now()
 
-	if _, err := h.db.NewUpdate().Model(&env).Column("name", "description", "updated_at").Where("id = ?", eid).Exec(ctx); err != nil {
+	if _, err := h.db.NewUpdate().Model(&env).Column("name", "key", "description", "updated_at").Where("id = ?", eid).Exec(ctx); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update environment"})
 	}
 
