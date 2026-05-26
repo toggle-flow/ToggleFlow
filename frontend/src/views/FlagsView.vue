@@ -32,7 +32,7 @@
           <Search
             class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
           />
-          <Input v-model="search" placeholder="Search flags..." class="pl-8" />
+          <Input v-model="search" :placeholder="$t('flags.search')" class="pl-8" />
         </div>
       </div>
 

@@ -2,8 +2,8 @@
   <Dialog :open="open" @update:open="$emit('update:open', $event)">
     <DialogContent class="sm:max-w-sm">
       <DialogHeader>
-        <DialogTitle>Edit environment</DialogTitle>
-        <DialogDescription>Update the environment name, key, or description.</DialogDescription>
+        <DialogTitle>{{ $t('environments.editTitle') }}</DialogTitle>
+        <DialogDescription>{{ $t('environments.editDescription') }}</DialogDescription>
       </DialogHeader>
 
       <form class="space-y-3" @submit.prevent="submit">
