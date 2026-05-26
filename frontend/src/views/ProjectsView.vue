@@ -47,17 +47,33 @@
       <div class="space-y-2">
         <div v-for="project in projects" :key="project.id" class="rounded-lg border bg-card p-4">
           <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0 flex-1 space-y-1">
-              <p class="text-sm font-medium leading-none">{{ project.name }}</p>
-              <p class="text-xs font-mono text-muted-foreground">{{ project.slug }}</p>
-              <p class="text-xs text-muted-foreground pt-0.5 flex items-center gap-1 flex-wrap">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm font-medium leading-none">{{ project.name }}</p>
                 <span
-                  >Created {{ timeAgo(project.created_at)
-                  }}{{ project.created_by_name ? ` by ${project.created_by_name}` : '' }}</span
+                  class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                  >{{ project.slug }}</span
                 >
-                <span class="text-muted-foreground/40">·</span>
-                <span>{{ $t('projects.edited') }} {{ timeAgo(project.updated_at) }}</span>
-              </p>
+              </div>
+              <div
+                class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
+              >
+                <span class="flex items-center gap-1.5">
+                  <span
+                    class="flex size-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold uppercase"
+                    >{{ project.created_by_name ? project.created_by_name[0] : '?' }}</span
+                  >
+                  {{ project.created_by_name || '—' }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <CalendarDays class="size-3 shrink-0" />
+                  {{ timeAgo(project.created_at) }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <Clock class="size-3 shrink-0" />
+                  {{ timeAgo(project.updated_at) }}
+                </span>
+              </div>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <button
@@ -93,7 +109,17 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
-import { Plus, FolderOpen, Loader2, Pencil, Trash2, Search, SearchX } from '@lucide/vue'
+import {
+  Plus,
+  FolderOpen,
+  Loader2,
+  Pencil,
+  Trash2,
+  Search,
+  SearchX,
+  CalendarDays,
+  Clock,
+} from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'

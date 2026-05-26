@@ -57,11 +57,17 @@
         </Button>
         <Button
           variant="destructive"
-          :disabled="confirmation !== project?.name || loading"
+          :disabled="countdown > 0 || confirmation !== project?.name || loading"
           @click="submit"
         >
           <Loader2 v-if="loading" class="size-4 animate-spin" />
-          {{ loading ? $t('projects.deleting') : $t('projects.deleteConfirmButton') }}
+          {{
+            loading
+              ? $t('projects.deleting')
+              : countdown > 0
+                ? `${$t('projects.deleteConfirmButton')} (${countdown}s)`
+                : $t('projects.deleteConfirmButton')
+          }}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -69,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { TriangleAlert, AlertCircle, Loader2 } from '@lucide/vue'
 import {
   Dialog,
@@ -94,6 +100,8 @@ const emit = defineEmits<{
 const confirmation = ref('')
 const loading = ref(false)
 const error = ref('')
+const countdown = ref(0)
+let countdownTimer: ReturnType<typeof setInterval> | null = null
 
 watch(
   () => props.open,
@@ -101,9 +109,26 @@ watch(
     if (v) {
       confirmation.value = ''
       error.value = ''
+      countdown.value = 10
+      countdownTimer = setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          clearInterval(countdownTimer!)
+          countdownTimer = null
+        }
+      }, 1000)
+    } else {
+      if (countdownTimer) {
+        clearInterval(countdownTimer)
+        countdownTimer = null
+      }
     }
   }
 )
+
+onUnmounted(() => {
+  if (countdownTimer) clearInterval(countdownTimer)
+})
 
 async function submit() {
   if (!props.project || confirmation.value !== props.project.name) return
