@@ -14,11 +14,16 @@ import (
 	"toggleflow/internal/db"
 )
 
-// ProjectResponse extends db.Project with the creator's display name,
-// resolved via a LEFT JOIN on the users table in ListProjects.
+// ProjectResponse is the API shape for a project, including the creator's name
+// resolved via a LEFT JOIN on users in ListProjects.
 type ProjectResponse struct {
-	db.Project
-	CreatedByName string `bun:"created_by_name" json:"created_by_name"`
+	ID            int64     `bun:"id"            json:"id"`
+	Name          string    `bun:"name"          json:"name"`
+	Slug          string    `bun:"slug"          json:"slug"`
+	CreatedBy     *int64    `bun:"created_by"    json:"created_by,omitempty"`
+	CreatedByName string    `bun:"created_by_name" json:"created_by_name"`
+	CreatedAt     time.Time `bun:"created_at"    json:"created_at"`
+	UpdatedAt     time.Time `bun:"updated_at"    json:"updated_at"`
 }
 
 func (h *handler) ListProjects(c *fiber.Ctx) error {
