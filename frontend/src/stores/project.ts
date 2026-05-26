@@ -8,9 +8,10 @@ export const useProjectStore = defineStore('project', () => {
     JSON.parse(localStorage.getItem('currentProject') ?? 'null'),
   )
 
-  function setCurrent(project: Project) {
+  function setCurrent(project: Project | null) {
     current.value = project
-    localStorage.setItem('currentProject', JSON.stringify(project))
+    if (project) localStorage.setItem('currentProject', JSON.stringify(project))
+    else localStorage.removeItem('currentProject')
   }
 
   function setProjects(list: Project[]) {

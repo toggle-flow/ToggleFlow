@@ -7,12 +7,13 @@
       </DialogHeader>
 
       <form class="space-y-3" @submit.prevent="submit">
-        <div class="space-y-1.5">
+        <div class="space-y-2">
           <Label for="env-name">{{ $t('environments.name') }}</Label>
           <Input
             id="env-name"
             v-model="name"
             :placeholder="$t('environments.namePlaceholder')"
+            class="mt-2"
             required
             autofocus
           />

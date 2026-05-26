@@ -49,35 +49,38 @@
         </div>
 
         <form class="space-y-3" @submit.prevent="submit">
-          <div class="space-y-1.5">
+          <div class="space-y-2">
             <Label for="name">{{ $t('setup.name') }}</Label>
             <Input
               id="name"
               v-model="form.name"
               type="text"
               :placeholder="$t('setup.namePlaceholder')"
+              class="mt-2"
               required
             />
           </div>
 
-          <div class="space-y-1.5">
+          <div class="space-y-2">
             <Label for="email">{{ $t('setup.email') }}</Label>
             <Input
               id="email"
               v-model="form.email"
               type="email"
               :placeholder="$t('setup.emailPlaceholder')"
+              class="mt-2"
               required
             />
           </div>
 
-          <div class="space-y-1.5">
+          <div class="space-y-2">
             <Label for="password">{{ $t('setup.password') }}</Label>
             <Input
               id="password"
               v-model="form.password"
               type="password"
               :placeholder="$t('setup.passwordPlaceholder')"
+              class="mt-2"
               required
               minlength="8"
             />

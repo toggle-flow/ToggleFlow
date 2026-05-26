@@ -49,24 +49,26 @@
         </div>
 
         <form class="space-y-3" @submit.prevent="submit">
-          <div class="space-y-1.5">
+          <div class="space-y-2">
             <Label for="email">{{ $t('login.email') }}</Label>
             <Input
               id="email"
               v-model="form.email"
               type="email"
               :placeholder="$t('login.emailPlaceholder')"
+              class="mt-2"
               required
             />
           </div>
 
-          <div class="space-y-1.5">
+          <div class="space-y-2">
             <Label for="password">{{ $t('login.password') }}</Label>
             <Input
               id="password"
               v-model="form.password"
               type="password"
               :placeholder="$t('login.passwordPlaceholder')"
+              class="mt-2"
               required
             />
           </div>

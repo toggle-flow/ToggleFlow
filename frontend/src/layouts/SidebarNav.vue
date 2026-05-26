@@ -88,7 +88,7 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ToggleRight, Flag, Globe, ClipboardList, Users, LogOut, Settings, ChevronsUpDown, Check, Plus } from '@lucide/vue'
+import { ToggleRight, Flag, FolderOpen, Globe, ClipboardList, Users, LogOut, Settings, ChevronsUpDown, Check, Plus } from '@lucide/vue'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -109,6 +109,7 @@ const createDialogOpen = ref(false)
 
 const navItems = computed(() => {
   const items = [
+    { to: '/projects',     icon: FolderOpen,   label: t('nav.projects') },
     { to: '/flags',        icon: Flag,         label: t('nav.flags') },
     { to: '/environments', icon: Globe,         label: t('nav.environments') },
     { to: '/audit',        icon: ClipboardList, label: t('nav.audit') },

@@ -32,6 +32,7 @@
     "submitting": "Anmeldung läuft..."
   },
   "nav": {
+    "projects": "Projekte",
     "flags": "Feature-Flags",
     "environments": "Umgebungen",
     "audit": "Audit-Protokoll",
@@ -54,8 +55,24 @@
     "namePlaceholder": "Mein Projekt",
     "create": "Projekt erstellen",
     "creating": "Wird erstellt...",
+    "subtitle": "Projekte und deren Einstellungen verwalten",
     "noProject": "Kein Projekt ausgewählt",
-    "noProjectDescription": "Wählen Sie ein Projekt aus der Seitenleiste oder erstellen Sie ein neues."
+    "noProjectDescription": "Wählen Sie ein Projekt aus der Seitenleiste oder erstellen Sie ein neues.",
+    "editTitle": "Projekt umbenennen",
+    "editDescription": "Ändern Sie den Anzeigenamen dieses Projekts.",
+    "save": "Speichern",
+    "saving": "Wird gespeichert...",
+    "emptyTitle": "Noch keine Projekte",
+    "emptyDescription": "Erstellen Sie Ihr erstes Projekt, um mit der Verwaltung von Feature-Flags zu beginnen.",
+    "deleteTitle": "Projekt löschen",
+    "deleteSubtitle": "Diese Aktion kann nicht rückgängig gemacht werden",
+    "deleteWarning": "Folgendes wird dauerhaft gelöscht:",
+    "deleteWarningEnd": "und alles darin.",
+    "deleteConsequences": "Alle Umgebungen, Feature-Flags und der Audit-Verlauf werden dauerhaft entfernt.",
+    "deleteTypePrompt": "Geben Sie den Projektnamen zur Bestätigung ein:",
+    "deleteConfirmButton": "Projekt löschen",
+    "deleting": "Wird gelöscht...",
+    "slug": "Slug"
   },
   "flags": {
     "title": "Feature-Flags",

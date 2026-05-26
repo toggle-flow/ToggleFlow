@@ -32,6 +32,7 @@
     "submitting": "Signing in..."
   },
   "nav": {
+    "projects": "Projects",
     "flags": "Feature Flags",
     "environments": "Environments",
     "audit": "Audit Log",
@@ -54,8 +55,24 @@
     "namePlaceholder": "My project",
     "create": "Create project",
     "creating": "Creating...",
+    "subtitle": "Manage your projects and their settings",
     "noProject": "No project selected",
-    "noProjectDescription": "Select a project from the sidebar or create a new one to get started."
+    "noProjectDescription": "Select a project from the sidebar or create a new one to get started.",
+    "editTitle": "Rename project",
+    "editDescription": "Change the display name of this project.",
+    "save": "Save",
+    "saving": "Saving...",
+    "emptyTitle": "No projects yet",
+    "emptyDescription": "Create your first project to start managing feature flags.",
+    "deleteTitle": "Delete project",
+    "deleteSubtitle": "This action cannot be undone",
+    "deleteWarning": "This will permanently delete",
+    "deleteWarningEnd": "and everything inside it.",
+    "deleteConsequences": "All environments, feature flags, and audit history will be permanently removed.",
+    "deleteTypePrompt": "Type the project name to confirm:",
+    "deleteConfirmButton": "Delete project",
+    "deleting": "Deleting...",
+    "slug": "Slug"
   },
   "flags": {
     "title": "Feature Flags",

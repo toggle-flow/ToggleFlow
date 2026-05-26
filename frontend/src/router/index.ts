@@ -15,6 +15,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
       children: [
         { path: '', redirect: { name: 'flags' } },
+        { path: 'projects',     name: 'projects',     component: () => import('@/views/ProjectsView.vue') },
         { path: 'flags',        name: 'flags',        component: () => import('@/views/FlagsView.vue') },
         { path: 'environments', name: 'environments', component: () => import('@/views/EnvironmentsView.vue') },
         { path: 'audit',        name: 'audit',        component: () => import('@/views/AuditView.vue') },

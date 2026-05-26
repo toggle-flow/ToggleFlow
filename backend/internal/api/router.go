@@ -33,6 +33,8 @@ func Register(app *fiber.App, database *bun.DB) {
 	projects := protected.Group("/projects", auth.RequireRole(db.RoleOwner))
 	projects.Post("/", h.CreateProject)
 	projects.Get("/", h.ListProjects)
+	projects.Patch("/:id", h.UpdateProject)
+	projects.Delete("/:id", h.DeleteProject)
 	projects.Post("/:pid/environments", h.CreateEnvironment)
 	projects.Get("/:pid/environments", h.ListEnvironments)
 

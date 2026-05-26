@@ -8,41 +8,43 @@
 
       <form class="space-y-4" @submit.prevent="submit">
         <!-- Name + key -->
-        <div class="space-y-1.5">
+        <div class="space-y-2">
           <Label for="flag-name">{{ $t('flags.name') }}</Label>
           <Input
             id="flag-name"
             v-model="name"
             :placeholder="$t('flags.namePlaceholder')"
+            class="mt-2"
             required
             autofocus
             @input="syncKey"
           />
         </div>
 
-        <div class="space-y-1.5">
+        <div class="space-y-2">
           <Label for="flag-key">{{ $t('flags.key') }}</Label>
           <Input
             id="flag-key"
             v-model="key"
             :placeholder="$t('flags.keyPlaceholder')"
+            class="mt-2 font-mono"
             required
-            class="font-mono"
             @input="keyTouched = true"
           />
         </div>
 
-        <div class="space-y-1.5">
+        <div class="space-y-2">
           <Label for="flag-description">{{ $t('flags.description') }}</Label>
           <Input
             id="flag-description"
             v-model="description"
             :placeholder="$t('flags.descriptionPlaceholder')"
+            class="mt-2"
           />
         </div>
 
         <!-- Flag type selector — like a radio group but styled as pills -->
-        <div class="space-y-1.5">
+        <div class="space-y-2">
           <Label>{{ $t('flags.flagType') }}</Label>
           <div class="flex gap-1.5">
             <button
