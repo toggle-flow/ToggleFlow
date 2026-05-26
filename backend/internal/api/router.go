@@ -36,18 +36,12 @@ func Register(app *fiber.App, database *bun.DB) {
 	protected.Delete("/users/:id", auth.RequireRole(db.RoleSuperuser), h.DeleteUser)
 	protected.Post("/users/:id/reset-link", auth.RequireRole(db.RoleSuperuser), h.GenerateResetLink)
 
-	// Projects — Owner and above
-	projects := protected.Group("/projects", auth.RequireRole(db.RoleOwner))
-	projects.Post("/", h.CreateProject)
-	projects.Get("/", h.ListProjects)
-	projects.Patch("/:id", h.UpdateProject)
-	projects.Delete("/:id", h.DeleteProject)
-	projects.Post("/:pid/environments", h.CreateEnvironment)
-	projects.Get("/:pid/environments", h.ListEnvironments)
-	projects.Patch("/:pid/environments/:eid", h.UpdateEnvironment)
-	projects.Delete("/:pid/environments/:eid", h.DeleteEnvironment)
+	// Projects + environments list — any authenticated member (membership gate inside handlers)
+	protected.Get("/projects", h.ListProjects)
+	protected.Get("/projects/:pid/environments", h.ListEnvironments)
+	protected.Get("/projects/:pid/members", h.ListMembers)
 
-	// Flags — Editor and above to write, Viewer to read
+	// Flags — Editor and above to write, any member to read
 	protected.Get("/projects/:pid/flags", h.ListFlags)
 	protected.Get("/projects/:pid/flags/:key", h.GetFlag)
 	protected.Get("/projects/:pid/audit", h.ListAudit)
@@ -57,6 +51,17 @@ func Register(app *fiber.App, database *bun.DB) {
 	flagsWrite.Patch("/:key", h.UpdateFlag)
 	flagsWrite.Patch("/:key/env", h.ToggleFlagEnv)
 	flagsWrite.Delete("/:key", h.DeleteFlag)
+
+	// Project + environment write ops — Owner and above (plus membership gate in handlers)
+	projectsOwner := protected.Group("/projects", auth.RequireRole(db.RoleOwner))
+	projectsOwner.Post("/", h.CreateProject)
+	projectsOwner.Patch("/:id", h.UpdateProject)
+	projectsOwner.Delete("/:id", h.DeleteProject)
+	projectsOwner.Post("/:pid/environments", h.CreateEnvironment)
+	projectsOwner.Patch("/:pid/environments/:eid", h.UpdateEnvironment)
+	projectsOwner.Delete("/:pid/environments/:eid", h.DeleteEnvironment)
+	projectsOwner.Post("/:pid/members", h.AddMember)
+	projectsOwner.Delete("/:pid/members/:uid", h.RemoveMember)
 
 	// SDK — authenticated by sdk_key query param, not JWT
 	sdk := app.Group("/sdk")

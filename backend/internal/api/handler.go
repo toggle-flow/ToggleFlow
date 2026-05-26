@@ -1,8 +1,13 @@
 package api
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/uptrace/bun"
+
+	"toggleflow/internal/auth"
+	"toggleflow/internal/db"
 )
 
 // Page is the standard paginated response shape for all list endpoints.
@@ -47,6 +52,22 @@ func newHandler(db *bun.DB) *handler {
 
 func (h *handler) Health(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "ok"})
+}
+
+// checkProjectAccess returns nil if the caller is admin/superuser or is an explicit
+// member of the project. Otherwise it writes a 403 and returns a non-nil error.
+func (h *handler) checkProjectAccess(c *fiber.Ctx, pid int64) error {
+	claims := auth.GetClaims(c)
+	if db.RoleRank(claims.Role) >= db.RoleRank(db.RoleAdmin) {
+		return nil
+	}
+	count, err := h.db.NewSelect().TableExpr("project_members").
+		Where("project_id = ? AND user_id = ?", pid, claims.UserID).
+		Count(context.Background())
+	if err != nil || count == 0 {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "you are not a member of this project"})
+	}
+	return nil
 }
 
 // --- Audit ---

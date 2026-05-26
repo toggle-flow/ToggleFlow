@@ -78,6 +78,9 @@ func (h *handler) ListFlags(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 	pq := parsePage(c)
 	ctx := context.Background()
 
@@ -173,6 +176,9 @@ func (h *handler) CreateFlag(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 
 	var req createFlagRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -249,6 +255,9 @@ func (h *handler) UpdateFlag(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 	var flag db.Flag
@@ -295,6 +304,9 @@ func (h *handler) ToggleFlagEnv(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 	var flag db.Flag
@@ -325,6 +337,9 @@ func (h *handler) GetFlag(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 
 	var flag db.Flag
 	if err := h.db.NewSelect().Model(&flag).Where("project_id = ? AND key = ?", pid, c.Params("key")).Scan(context.Background()); err != nil {
@@ -337,6 +352,9 @@ func (h *handler) DeleteFlag(c *fiber.Ctx) error {
 	pid, err := strconv.ParseInt(c.Params("pid"), 10, 64)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
+	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
 	}
 
 	ctx := context.Background()

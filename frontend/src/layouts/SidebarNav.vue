@@ -98,6 +98,7 @@ import {
   Globe,
   ClipboardList,
   Users,
+  UserCheck,
   LogOut,
   Settings,
   ChevronsUpDown,
@@ -130,6 +131,7 @@ const navItems = computed(() => {
     { to: '/projects', icon: FolderOpen, label: t('nav.projects') },
     { to: '/flags', icon: Flag, label: t('nav.flags') },
     { to: '/environments', icon: Globe, label: t('nav.environments') },
+    { to: '/members', icon: UserCheck, label: t('nav.members') },
     { to: '/audit', icon: ClipboardList, label: t('nav.audit') },
   ]
   if (authStore.isAdmin) {

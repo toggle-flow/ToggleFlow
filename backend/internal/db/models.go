@@ -107,6 +107,13 @@ type User struct {
 	UpdatedAt             time.Time  `bun:"updated_at,notnull,default:current_timestamp" json:"updated_at"`
 }
 
+type ProjectMember struct {
+	bun.BaseModel `bun:"table:project_members"`
+	ProjectID     int64     `bun:"project_id,pk,notnull"                        json:"project_id"`
+	UserID        int64     `bun:"user_id,pk,notnull"                           json:"user_id"`
+	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
+}
+
 type AuditEntry struct {
 	bun.BaseModel `bun:"table:audit_entries"`
 	ID            int64     `bun:"id,pk,autoincrement"`

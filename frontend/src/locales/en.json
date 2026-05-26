@@ -35,6 +35,7 @@
     "projects": "Projects",
     "flags": "Feature Flags",
     "environments": "Environments",
+    "members": "Members",
     "audit": "Audit Log",
     "users": "Users",
     "signOut": "Sign out"
@@ -170,6 +171,19 @@
     "editDescription": "Update the user's name or role.",
     "deleteTitle": "Remove user",
     "you": "you"
+  },
+  "members": {
+    "title": "Members",
+    "subtitle": "Control who has access to this project",
+    "add": "Add member",
+    "adding": "Adding...",
+    "addTitle": "Add member",
+    "addDescription": "Grant a team member access to this project. Their global role determines what they can do.",
+    "user": "User",
+    "selectUser": "Select a user...",
+    "remove": "Remove from project",
+    "emptyTitle": "No members yet",
+    "emptyDescription": "Add team members to give them access to this project's flags and environments."
   },
   "settings": {
     "title": "Settings",

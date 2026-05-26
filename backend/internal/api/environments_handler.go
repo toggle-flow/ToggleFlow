@@ -18,6 +18,9 @@ func (h *handler) ListEnvironments(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 
 	pq := parsePage(c)
 	ctx := context.Background()
@@ -50,6 +53,9 @@ func (h *handler) CreateEnvironment(c *fiber.Ctx) error {
 	pid, err := strconv.ParseInt(c.Params("pid"), 10, 64)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
+	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
 	}
 
 	var req createEnvironmentRequest
@@ -97,6 +103,13 @@ type updateEnvironmentRequest struct {
 }
 
 func (h *handler) UpdateEnvironment(c *fiber.Ctx) error {
+	pid, err := strconv.ParseInt(c.Params("pid"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
+	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 	eid, err := strconv.ParseInt(c.Params("eid"), 10, 64)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid environment id"})
@@ -129,6 +142,13 @@ func (h *handler) UpdateEnvironment(c *fiber.Ctx) error {
 }
 
 func (h *handler) DeleteEnvironment(c *fiber.Ctx) error {
+	pid, err := strconv.ParseInt(c.Params("pid"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
+	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 	eid, err := strconv.ParseInt(c.Params("eid"), 10, 64)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid environment id"})

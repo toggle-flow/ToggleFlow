@@ -35,6 +35,7 @@
     "projects": "Projekte",
     "flags": "Feature-Flags",
     "environments": "Umgebungen",
+    "members": "Mitglieder",
     "audit": "Audit-Protokoll",
     "users": "Benutzer",
     "signOut": "Abmelden"
@@ -170,6 +171,19 @@
     "editDescription": "Name oder Rolle des Benutzers ändern.",
     "deleteTitle": "Benutzer entfernen",
     "you": "Sie"
+  },
+  "members": {
+    "title": "Mitglieder",
+    "subtitle": "Zugriff auf dieses Projekt steuern",
+    "add": "Mitglied hinzufügen",
+    "adding": "Wird hinzugefügt...",
+    "addTitle": "Mitglied hinzufügen",
+    "addDescription": "Einem Teammitglied Zugriff auf dieses Projekt gewähren. Die globale Rolle bestimmt, was es tun kann.",
+    "user": "Benutzer",
+    "selectUser": "Benutzer auswählen...",
+    "remove": "Aus Projekt entfernen",
+    "emptyTitle": "Noch keine Mitglieder",
+    "emptyDescription": "Fügen Sie Teammitglieder hinzu, um ihnen Zugriff auf die Flags und Umgebungen dieses Projekts zu geben."
   },
   "settings": {
     "title": "Einstellungen",

@@ -30,6 +30,7 @@ type ProjectResponse struct {
 func (h *handler) ListProjects(c *fiber.Ctx) error {
 	pq := parsePage(c)
 	ctx := context.Background()
+	claims := auth.GetClaims(c)
 
 	q := h.db.NewSelect().
 		TableExpr("projects AS p").
@@ -37,6 +38,10 @@ func (h *handler) ListProjects(c *fiber.Ctx) error {
 		ColumnExpr("COALESCE(u.name, '') AS created_by_name").
 		Join("LEFT JOIN users AS u ON u.id = p.created_by").
 		OrderExpr("p.created_at ASC")
+
+	if db.RoleRank(claims.Role) < db.RoleRank(db.RoleAdmin) {
+		q = q.Join("INNER JOIN project_members AS pm ON pm.project_id = p.id AND pm.user_id = ?", claims.UserID)
+	}
 
 	if pq.Search != "" {
 		q = q.Where("lower(p.name) LIKE lower(?)", "%"+pq.Search+"%")
@@ -85,12 +90,17 @@ func (h *handler) CreateProject(c *fiber.Ctx) error {
 		UpdatedAt:   time.Now(),
 	}
 
-	if _, err := h.db.NewInsert().Model(project).Exec(context.Background()); err != nil {
+	ctx := context.Background()
+	if _, err := h.db.NewInsert().Model(project).Exec(ctx); err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "a project with that key already exists"})
 		}
 		return c.Status(500).JSON(fiber.Map{"error": "failed to create project"})
 	}
+
+	// Auto-add creator as a project member.
+	member := &db.ProjectMember{ProjectID: project.ID, UserID: claims.UserID, CreatedAt: time.Now()}
+	_, _ = h.db.NewInsert().Model(member).Exec(ctx)
 
 	return c.Status(fiber.StatusCreated).JSON(project)
 }
@@ -105,6 +115,9 @@ func (h *handler) UpdateProject(c *fiber.Ctx) error {
 	pid, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
+	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
 	}
 
 	var req updateProjectRequest
@@ -142,6 +155,9 @@ func (h *handler) DeleteProject(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 
@@ -158,6 +174,7 @@ func (h *handler) DeleteProject(c *fiber.Ctx) error {
 	_, _ = h.db.NewDelete().TableExpr("flags").Where("project_id = ?", pid).Exec(ctx)
 	_, _ = h.db.NewDelete().TableExpr("environments").Where("project_id = ?", pid).Exec(ctx)
 	_, _ = h.db.NewDelete().TableExpr("audit_entries").Where("project_id = ?", pid).Exec(ctx)
+	_, _ = h.db.NewDelete().TableExpr("project_members").Where("project_id = ?", pid).Exec(ctx)
 
 	if _, err := h.db.NewDelete().TableExpr("projects").Where("id = ?", pid).Exec(ctx); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to delete project"})
