@@ -13,8 +13,23 @@
 
     <Separator />
 
+    <div class="relative">
+      <Search
+        class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+      />
+      <Input v-model="search" :placeholder="$t('projects.search')" class="pl-8" />
+    </div>
+
     <div v-if="loading" class="flex flex-col items-center justify-center py-24">
       <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
+    </div>
+
+    <div
+      v-else-if="projects.length === 0 && search"
+      class="flex flex-col items-center justify-center py-24 text-center"
+    >
+      <SearchX class="size-8 text-muted-foreground/30 mb-3" />
+      <p class="text-sm font-medium">{{ $t('projects.noResults') }}</p>
     </div>
 
     <div
@@ -31,10 +46,18 @@
     <template v-else>
       <div class="space-y-2">
         <div v-for="project in projects" :key="project.id" class="rounded-lg border bg-card p-4">
-          <div class="flex items-center justify-between gap-4">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium">{{ project.name }}</p>
-              <p class="text-xs font-mono text-muted-foreground mt-0.5">{{ project.slug }}</p>
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0 flex-1 space-y-1">
+              <p class="text-sm font-medium leading-none">{{ project.name }}</p>
+              <p class="text-xs font-mono text-muted-foreground">{{ project.slug }}</p>
+              <p class="text-xs text-muted-foreground pt-0.5 flex items-center gap-1 flex-wrap">
+                <span
+                  >Created {{ timeAgo(project.created_at)
+                  }}{{ project.created_by_name ? ` by ${project.created_by_name}` : '' }}</span
+                >
+                <span class="text-muted-foreground/40">·</span>
+                <span>{{ $t('projects.edited') }} {{ timeAgo(project.updated_at) }}</span>
+              </p>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <button
@@ -69,12 +92,15 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Plus, FolderOpen, Loader2, Pencil, Trash2 } from '@lucide/vue'
+import { watchDebounced } from '@vueuse/core'
+import { Plus, FolderOpen, Loader2, Pencil, Trash2, Search, SearchX } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import Pagination from '@/components/ui/pagination/Pagination.vue'
 import { projectsApi, type Project } from '@/api/projects'
 import { useProjectStore } from '@/stores/project'
+import { timeAgo } from '@/lib/utils'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
 import EditProjectDialog from '@/components/EditProjectDialog.vue'
 import DeleteProjectDialog from '@/components/DeleteProjectDialog.vue'
@@ -86,6 +112,7 @@ const projects = ref<Project[]>([])
 const total = ref(0)
 const page = ref(1)
 const limit = ref(LIMIT)
+const search = ref('')
 const loading = ref(false)
 const createDialogOpen = ref(false)
 const editDialogOpen = ref(false)
@@ -99,6 +126,7 @@ async function load() {
     const res = await projectsApi.list({
       limit: limit.value,
       offset: (page.value - 1) * limit.value,
+      search: search.value || undefined,
     })
     projects.value = res.data
     total.value = res.total
@@ -107,7 +135,17 @@ async function load() {
   }
 }
 
-// Reload whenever the store's projects change (e.g. created from sidebar dropdown)
+// Debounce search — like debounceTime(300) in RxJS
+watchDebounced(
+  search,
+  () => {
+    page.value = 1
+    load()
+  },
+  { debounce: 300 }
+)
+
+// Reload when sidebar creates a project
 watch(() => projectStore.projects.length, load)
 load()
 

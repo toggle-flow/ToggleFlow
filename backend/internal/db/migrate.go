@@ -34,6 +34,7 @@ func Migrate(db *bun.DB) error {
 	for _, stmt := range []string{
 		`ALTER TABLE flags ADD COLUMN flag_type TEXT NOT NULL DEFAULT 'boolean'`,
 		`ALTER TABLE flags ADD COLUMN variations TEXT NOT NULL DEFAULT '[]'`,
+		`ALTER TABLE projects ADD COLUMN created_by INTEGER REFERENCES users(id)`,
 	} {
 		_, _ = db.ExecContext(ctx, stmt)
 	}

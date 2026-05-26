@@ -4,6 +4,8 @@ export interface Project {
   id: number
   name: string
   slug: string
+  created_by: number | null
+  created_by_name: string
   created_at: string
   updated_at: string
 }

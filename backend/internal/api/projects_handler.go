@@ -10,16 +10,30 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/uptrace/bun"
 
+	"toggleflow/internal/auth"
 	"toggleflow/internal/db"
 )
+
+// ProjectResponse extends db.Project with the creator's display name,
+// resolved via a LEFT JOIN on the users table in ListProjects.
+type ProjectResponse struct {
+	db.Project
+	CreatedByName string `bun:"created_by_name" json:"created_by_name"`
+}
 
 func (h *handler) ListProjects(c *fiber.Ctx) error {
 	pq := parsePage(c)
 	ctx := context.Background()
 
-	q := h.db.NewSelect().Model((*db.Project)(nil)).OrderExpr("created_at ASC")
+	q := h.db.NewSelect().
+		TableExpr("projects AS p").
+		ColumnExpr("p.*").
+		ColumnExpr("COALESCE(u.name, '') AS created_by_name").
+		Join("LEFT JOIN users AS u ON u.id = p.created_by").
+		OrderExpr("p.created_at ASC")
+
 	if pq.Search != "" {
-		q = q.Where("lower(name) LIKE lower(?)", "%"+pq.Search+"%")
+		q = q.Where("lower(p.name) LIKE lower(?)", "%"+pq.Search+"%")
 	}
 
 	total, err := q.Count(ctx)
@@ -27,12 +41,12 @@ func (h *handler) ListProjects(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to count projects"})
 	}
 
-	projects := make([]db.Project, 0)
+	projects := make([]ProjectResponse, 0)
 	if err := q.Limit(pq.Limit).Offset(pq.Offset).Scan(ctx, &projects); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to fetch projects"})
 	}
 
-	return c.JSON(Page[db.Project]{Data: projects, Total: total, Limit: pq.Limit, Offset: pq.Offset})
+	return c.JSON(Page[ProjectResponse]{Data: projects, Total: total, Limit: pq.Limit, Offset: pq.Offset})
 }
 
 type createProjectRequest struct {
@@ -54,9 +68,11 @@ func (h *handler) CreateProject(c *fiber.Ctx) error {
 		slug = slugify(req.Name)
 	}
 
+	claims := auth.GetClaims(c)
 	project := &db.Project{
 		Name:      req.Name,
 		Slug:      slug,
+		CreatedBy: &claims.UserID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

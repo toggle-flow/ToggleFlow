@@ -72,7 +72,11 @@
     "deleteTypePrompt": "Type the project name to confirm:",
     "deleteConfirmButton": "Delete project",
     "deleting": "Deleting...",
-    "slug": "Slug"
+    "slug": "Slug",
+    "search": "Search projects...",
+    "noResults": "No projects match your search",
+    "createdBy": "by {name}",
+    "edited": "Edited"
   },
   "flags": {
     "title": "Feature Flags",
