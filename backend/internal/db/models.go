@@ -117,12 +117,12 @@ type ProjectMember struct {
 
 type AuditEntry struct {
 	bun.BaseModel `bun:"table:audit_entries"`
-	ID            int64     `bun:"id,pk,autoincrement"`
-	ProjectID     int64     `bun:"project_id,notnull"`
-	Actor         string    `bun:"actor,notnull"`
-	Action        string    `bun:"action,notnull"`
-	Resource      string    `bun:"resource,notnull"`
-	OldValue      string    `bun:"old_value,type:text"`
-	NewValue      string    `bun:"new_value,type:text"`
-	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp"`
+	ID            int64     `bun:"id,pk,autoincrement"                          json:"id"`
+	ProjectID     int64     `bun:"project_id,notnull"                           json:"project_id"`
+	Actor         string    `bun:"actor,notnull"                                json:"actor"`
+	Action        string    `bun:"action,notnull"                               json:"action"`
+	Resource      string    `bun:"resource,notnull"                             json:"resource"`
+	OldValue      string    `bun:"old_value,type:text"                          json:"old_value"`
+	NewValue      string    `bun:"new_value,type:text"                          json:"new_value"`
+	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
 }

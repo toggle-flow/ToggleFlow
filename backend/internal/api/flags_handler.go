@@ -235,6 +235,9 @@ func (h *handler) CreateFlag(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to create flag"})
 	}
 
+	h.writeAudit(pid, h.actorName(c), "flag.created", flag.Key, "",
+		toJSON(map[string]any{"name": flag.Name, "key": flag.Key, "type": flag.FlagType}))
+
 	// Seed flag_environment rows for every existing environment
 	var envs []db.Environment
 	if err := h.db.NewSelect().Model(&envs).Where("project_id = ?", pid).Scan(ctx); err == nil {
@@ -284,6 +287,7 @@ func (h *handler) UpdateFlag(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to encode variations"})
 	}
 
+	oldName, oldDesc := flag.Name, flag.Description
 	flag.Name = req.Name
 	flag.Description = req.Description
 	flag.Variations = string(variationsJSON)
@@ -292,6 +296,10 @@ func (h *handler) UpdateFlag(c *fiber.Ctx) error {
 	if _, err := h.db.NewUpdate().Model(&flag).Column("name", "description", "variations", "updated_at").Where("id = ?", flag.ID).Exec(ctx); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update flag"})
 	}
+
+	h.writeAudit(pid, h.actorName(c), "flag.updated", flag.Key,
+		toJSON(map[string]any{"name": oldName, "description": oldDesc}),
+		toJSON(map[string]any{"name": flag.Name, "description": flag.Description}))
 
 	return c.JSON(parseFlagResponse(flag, nil))
 }
@@ -334,14 +342,20 @@ func (h *handler) ToggleFlagEnv(c *fiber.Ctx) error {
 	}
 
 	var fe db.FlagEnvironment
+	oldEnabled := false
 	if err := h.db.NewSelect().Model(&fe).Where("flag_id = ? AND environment_id = ?", flag.ID, req.EnvironmentID).Scan(ctx); err != nil {
 		fe = db.FlagEnvironment{FlagID: flag.ID, EnvironmentID: req.EnvironmentID, Enabled: req.Enabled, DefaultVariation: req.DefaultVariation}
 		_, _ = h.db.NewInsert().Model(&fe).Exec(ctx)
 	} else {
+		oldEnabled = fe.Enabled
 		fe.Enabled = req.Enabled
 		fe.DefaultVariation = req.DefaultVariation
 		_, _ = h.db.NewUpdate().Model(&fe).Column("enabled", "default_variation").Where("id = ?", fe.ID).Exec(ctx)
 	}
+
+	h.writeAudit(pid, h.actorName(c), "flag.toggled", flag.Key,
+		toJSON(map[string]any{"env": env.Name, "enabled": oldEnabled}),
+		toJSON(map[string]any{"env": env.Name, "enabled": req.Enabled}))
 
 	return c.JSON(fiber.Map{"ok": true})
 }
@@ -382,6 +396,9 @@ func (h *handler) DeleteFlag(c *fiber.Ctx) error {
 	if _, err := h.db.NewDelete().Model(&flag).Where("id = ?", flag.ID).Exec(ctx); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to delete flag"})
 	}
+
+	h.writeAudit(pid, h.actorName(c), "flag.deleted", flag.Key,
+		toJSON(map[string]any{"name": flag.Name, "key": flag.Key}), "")
 
 	return c.SendStatus(fiber.StatusNoContent)
 }

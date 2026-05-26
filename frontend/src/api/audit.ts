@@ -1,0 +1,17 @@
+import { api, type PageResult, type PageParams } from './client'
+
+export interface AuditEntry {
+  id: number
+  project_id: number
+  actor: string
+  action: string
+  resource: string
+  old_value: string
+  new_value: string
+  created_at: string
+}
+
+export const auditApi = {
+  list: (projectId: number, params?: PageParams) =>
+    api.get<PageResult<AuditEntry>>(`/projects/${projectId}/audit`, params),
+}

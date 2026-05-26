@@ -95,6 +95,9 @@ func (h *handler) CreateEnvironment(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to create environment"})
 	}
 
+	h.writeAudit(pid, h.actorName(c), "env.created", env.Key, "",
+		toJSON(map[string]any{"name": env.Name, "key": env.Key}))
+
 	return c.Status(fiber.StatusCreated).JSON(env)
 }
 
@@ -132,6 +135,7 @@ func (h *handler) UpdateEnvironment(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name is required"})
 	}
 
+	oldName, oldKey := env.Name, env.Key
 	env.Name = req.Name
 	env.Key = req.Key
 	env.Description = req.Description
@@ -141,6 +145,10 @@ func (h *handler) UpdateEnvironment(c *fiber.Ctx) error {
 	if _, err := h.db.NewUpdate().Model(&env).Column("name", "key", "description", "protected", "updated_at").Where("id = ?", eid).Exec(ctx); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update environment"})
 	}
+
+	h.writeAudit(env.ProjectID, h.actorName(c), "env.updated", env.Key,
+		toJSON(map[string]any{"name": oldName, "key": oldKey}),
+		toJSON(map[string]any{"name": env.Name, "key": env.Key}))
 
 	return c.JSON(env)
 }
@@ -160,11 +168,19 @@ func (h *handler) DeleteEnvironment(c *fiber.Ctx) error {
 
 	ctx := context.Background()
 
+	var env db.Environment
+	if err := h.db.NewSelect().Model(&env).Where("id = ?", eid).Scan(ctx); err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "environment not found"})
+	}
+
 	_, _ = h.db.NewDelete().TableExpr("flag_environments").Where("environment_id = ?", eid).Exec(ctx)
 
 	if _, err := h.db.NewDelete().TableExpr("environments").Where("id = ?", eid).Exec(ctx); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to delete environment"})
 	}
+
+	h.writeAudit(env.ProjectID, h.actorName(c), "env.deleted", env.Key,
+		toJSON(map[string]any{"name": env.Name, "key": env.Key}), "")
 
 	return c.SendStatus(fiber.StatusNoContent)
 }

@@ -70,9 +70,6 @@ func (h *handler) checkProjectAccess(c *fiber.Ctx, pid int64) error {
 	return nil
 }
 
-// --- Audit ---
-func (h *handler) ListAudit(c *fiber.Ctx) error { return stub(c) }
-
 // --- SDK ---
 func (h *handler) SDKGetFlags(c *fiber.Ctx) error { return stub(c) }
 func (h *handler) SDKEvaluate(c *fiber.Ctx) error { return stub(c) }
