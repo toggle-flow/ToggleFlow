@@ -30,26 +30,26 @@ type Environment struct {
 
 type Flag struct {
 	bun.BaseModel `bun:"table:flags"`
-	ID          int64     `bun:"id,pk,autoincrement"`
-	ProjectID   int64     `bun:"project_id,notnull"`
-	Key         string    `bun:"key,notnull"`
-	Name        string    `bun:"name,notnull"`
-	Description string    `bun:"description"`
-	CreatedAt   time.Time `bun:"created_at,notnull,default:current_timestamp"`
-	UpdatedAt   time.Time `bun:"updated_at,notnull,default:current_timestamp"`
+	ID          int64     `bun:"id,pk,autoincrement"                          json:"id"`
+	ProjectID   int64     `bun:"project_id,notnull"                           json:"project_id"`
+	Key         string    `bun:"key,notnull"                                  json:"key"`
+	Name        string    `bun:"name,notnull"                                 json:"name"`
+	Description string    `bun:"description"                                  json:"description"`
+	CreatedAt   time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
+	UpdatedAt   time.Time `bun:"updated_at,notnull,default:current_timestamp" json:"updated_at"`
 }
 
 // FlagEnvironment holds per-environment state for a flag — enabled, variations, targeting rules.
 // Variations and Rules are stored as JSON strings (Go has no native JSON column type).
 type FlagEnvironment struct {
 	bun.BaseModel `bun:"table:flag_environments"`
-	ID               int64  `bun:"id,pk,autoincrement"`
-	FlagID           int64  `bun:"flag_id,notnull"`
-	EnvironmentID    int64  `bun:"environment_id,notnull"`
-	Enabled          bool   `bun:"enabled,notnull,default:false"`
-	Variations       string `bun:"variations,type:text"`
-	Rules            string `bun:"rules,type:text"`
-	DefaultVariation int    `bun:"default_variation,notnull,default:0"`
+	ID               int64  `bun:"id,pk,autoincrement"          json:"id"`
+	FlagID           int64  `bun:"flag_id,notnull"              json:"flag_id"`
+	EnvironmentID    int64  `bun:"environment_id,notnull"       json:"environment_id"`
+	Enabled          bool   `bun:"enabled,notnull,default:false" json:"enabled"`
+	Variations       string `bun:"variations,type:text"         json:"variations"`
+	Rules            string `bun:"rules,type:text"              json:"rules"`
+	DefaultVariation int    `bun:"default_variation,notnull,default:0" json:"default_variation"`
 }
 
 // Role defines what a user can do in the system.
