@@ -66,18 +66,22 @@
                 </p>
               </div>
               <div class="flex items-center gap-1 shrink-0">
-                <button
-                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  @click="openEdit(env)"
-                >
-                  <Pencil class="size-3.5" />
-                </button>
-                <button
-                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  @click="openDelete(env)"
-                >
-                  <Trash2 class="size-3.5" />
-                </button>
+                <Tooltip :text="$t('common.edit')">
+                  <button
+                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    @click="openEdit(env)"
+                  >
+                    <Pencil class="size-3.5" />
+                  </button>
+                </Tooltip>
+                <Tooltip :text="$t('common.delete')">
+                  <button
+                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    @click="openDelete(env)"
+                  >
+                    <Trash2 class="size-3.5" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
 
@@ -134,6 +138,7 @@ import { environmentsApi, type Environment } from '@/api/environments'
 import CreateEnvironmentDialog from '@/components/CreateEnvironmentDialog.vue'
 import EditEnvironmentDialog from '@/components/EditEnvironmentDialog.vue'
 import DeleteEnvironmentDialog from '@/components/DeleteEnvironmentDialog.vue'
+import { Tooltip } from '@/components/ui/tooltip'
 
 const projectStore = useProjectStore()
 const environments = ref<Environment[]>([])

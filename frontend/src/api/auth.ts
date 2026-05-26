@@ -19,5 +19,11 @@ export const authApi = {
     api.post<AuthResponse>('/setup', { name, email, password, locale }),
   login: (email: string, password: string) =>
     api.post<AuthResponse>('/auth/login', { email, password }),
+  activate: (token: string, password: string) =>
+    api.post<AuthResponse>('/auth/activate', { token, password }),
+  getInvite: (uuid: string) => api.get<{ name: string; email: string }>(`/auth/invite/${uuid}`),
+  getResetInfo: (uuid: string) => api.get<{ name: string; email: string }>(`/auth/reset/${uuid}`),
+  resetPassword: (token: string, password: string) =>
+    api.post<AuthResponse>('/auth/reset', { token, password }),
   me: () => api.get<User>('/auth/me'),
 }

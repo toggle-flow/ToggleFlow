@@ -9,6 +9,8 @@ const router = createRouter({
   routes: [
     { path: '/setup', name: 'setup', component: () => import('@/views/SetupView.vue') },
     { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue') },
+    { path: '/activate', name: 'activate', component: () => import('@/views/ActivateView.vue') },
+    { path: '/reset', name: 'reset', component: () => import('@/views/ResetView.vue') },
     {
       path: '/',
       component: () => import('@/layouts/AppLayout.vue'),
@@ -45,8 +47,10 @@ router.beforeEach(async (to) => {
     }
   }
 
+  const publicRoutes = ['setup', 'login', 'activate', 'reset']
   if (!initialized && to.name !== 'setup') return { name: 'setup' }
   if (initialized && to.name === 'setup') return { name: 'login' }
+  if (publicRoutes.includes(to.name as string)) return
 
   const auth = useAuthStore()
 

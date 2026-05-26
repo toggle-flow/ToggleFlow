@@ -40,6 +40,13 @@ func Migrate(db *bun.DB) error {
 		`ALTER TABLE environments ADD COLUMN description TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE environments ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`,
 		`ALTER TABLE environments RENAME COLUMN slug TO key`,
+		`ALTER TABLE users ADD COLUMN welcome_token TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE users ADD COLUMN welcome_token_expires_at DATETIME`,
+		`ALTER TABLE users ADD COLUMN activated_at DATETIME`,
+		`ALTER TABLE users ADD COLUMN reset_token TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME`,
+		`ALTER TABLE users ADD COLUMN uuid TEXT NOT NULL DEFAULT ''`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uuid ON users (uuid) WHERE uuid != ''`,
 	} {
 		_, _ = db.ExecContext(ctx, stmt)
 	}

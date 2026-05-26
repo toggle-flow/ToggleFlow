@@ -15,6 +15,10 @@ func Register(app *fiber.App, database *bun.DB) {
 	app.Get("/api/setup/status", h.SetupStatus)
 	app.Post("/api/setup", h.Setup)
 	app.Post("/api/auth/login", h.Login)
+	app.Post("/api/auth/activate", h.ActivateAccount)
+	app.Get("/api/auth/invite/:uuid", h.GetInviteInfo)
+	app.Post("/api/auth/reset", h.ResetPassword)
+	app.Get("/api/auth/reset/:uuid", h.GetResetInfo)
 
 	// Authenticated — all roles
 	protected := app.Group("/api", auth.Require)
@@ -26,9 +30,11 @@ func Register(app *fiber.App, database *bun.DB) {
 	users.Get("/", h.ListUsers)
 	users.Post("/", h.CreateUser)
 	users.Patch("/:id", h.UpdateUser)
+	users.Post("/:id/reinvite", h.ReinviteUser)
 
-	// Delete user — Superuser only
+	// Delete user and reset link — Superuser only
 	protected.Delete("/users/:id", auth.RequireRole(db.RoleSuperuser), h.DeleteUser)
+	protected.Post("/users/:id/reset-link", auth.RequireRole(db.RoleSuperuser), h.GenerateResetLink)
 
 	// Projects — Owner and above
 	projects := protected.Group("/projects", auth.RequireRole(db.RoleOwner))

@@ -96,18 +96,22 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-1 shrink-0">
-                  <button
-                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    @click="openEdit(flag)"
-                  >
-                    <Pencil class="size-3.5" />
-                  </button>
-                  <button
-                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    @click="openDelete(flag)"
-                  >
-                    <Trash2 class="size-3.5" />
-                  </button>
+                  <Tooltip :text="$t('common.edit')">
+                    <button
+                      class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      @click="openEdit(flag)"
+                    >
+                      <Pencil class="size-3.5" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip :text="$t('common.delete')">
+                    <button
+                      class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      @click="openDelete(flag)"
+                    >
+                      <Trash2 class="size-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -221,6 +225,7 @@ import { timeAgo } from '@/lib/utils'
 import CreateFlagDialog from '@/components/CreateFlagDialog.vue'
 import EditFlagDialog from '@/components/EditFlagDialog.vue'
 import DeleteFlagDialog from '@/components/DeleteFlagDialog.vue'
+import { Tooltip } from '@/components/ui/tooltip'
 
 const LIMIT = 20
 

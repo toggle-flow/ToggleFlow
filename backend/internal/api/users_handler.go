@@ -2,16 +2,19 @@ package api
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"time"
 
 	"toggleflow/internal/auth"
 	"toggleflow/internal/db"
 
 	"github.com/gofiber/fiber/v2"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/google/uuid"
 )
 
-// ListUsers returns all users. Admin and above only.
 func (h *handler) ListUsers(c *fiber.Ctx) error {
 	var users []db.User
 	if err := h.db.NewSelect().Model(&users).OrderExpr("created_at ASC").Scan(context.Background()); err != nil {
@@ -21,14 +24,35 @@ func (h *handler) ListUsers(c *fiber.Ctx) error {
 }
 
 type createUserRequest struct {
-	Name     string  `json:"name"`
-	Email    string  `json:"email"`
-	Password string  `json:"password"`
-	Role     db.Role `json:"role"`
+	Name       string  `json:"name"`
+	Email      string  `json:"email"`
+	Role       db.Role `json:"role"`
+	ExpiryDays int     `json:"expiry_days"`
 }
 
-// CreateUser creates a new user. Only Admin+ can call this.
-// Superuser is the only role that can create another Superuser or Admin.
+const tokenCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+// generateWelcomeToken returns a token in XXXX-XXXX-XXXX-XXXX-XXXX format
+// (20 mixed-case alphanumeric chars, 4 hyphens) and its SHA-256 hash.
+// Only the hash is stored; the plain token is shown to the inviter once.
+func generateWelcomeToken() (plain, hashed string, err error) {
+	b := make([]byte, 20)
+	if _, err = rand.Read(b); err != nil {
+		return
+	}
+	chars := make([]byte, 20)
+	for i, v := range b {
+		chars[i] = tokenCharset[int(v)%len(tokenCharset)]
+	}
+	plain = fmt.Sprintf("%s-%s-%s-%s-%s",
+		chars[0:4], chars[4:8], chars[8:12], chars[12:16], chars[16:20])
+	sum := sha256.Sum256([]byte(plain))
+	hashed = hex.EncodeToString(sum[:])
+	return
+}
+
+// CreateUser creates an inactive user account and returns a one-time welcome token.
+// The invitee must use the token to set their password before they can log in.
 func (h *handler) CreateUser(c *fiber.Ctx) error {
 	claims := auth.GetClaims(c)
 
@@ -36,43 +60,54 @@ func (h *handler) CreateUser(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
 	}
-	if req.Name == "" || req.Email == "" || req.Password == "" || req.Role == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name, email, password and role are required"})
+	if req.Name == "" || req.Email == "" || req.Role == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name, email and role are required"})
 	}
 
-	// Only superuser can grant superuser or admin roles
 	if db.RoleRank(req.Role) >= db.RoleRank(db.RoleAdmin) && claims.Role != db.RoleSuperuser {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "only superuser can assign admin or superuser roles"})
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to hash password"})
+	expiryDays := req.ExpiryDays
+	if expiryDays <= 0 {
+		expiryDays = 7
 	}
 
+	plainToken, hashedToken, err := generateWelcomeToken()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to generate token"})
+	}
+
+	expiresAt := time.Now().Add(time.Duration(expiryDays) * 24 * time.Hour)
 	user := &db.User{
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: string(hash),
-		Role:         req.Role,
-		CreatedBy:    &claims.UserID,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		UUID:                  uuid.NewString(),
+		Name:                  req.Name,
+		Email:                 req.Email,
+		PasswordHash:          "",
+		Role:                  req.Role,
+		WelcomeToken:          hashedToken,
+		WelcomeTokenExpiresAt: &expiresAt,
+		CreatedBy:             &claims.UserID,
+		CreatedAt:             time.Now(),
+		UpdatedAt:             time.Now(),
 	}
 
 	if _, err := h.db.NewInsert().Model(user).Exec(context.Background()); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to create user"})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(user)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"user":          user,
+		"welcome_token": plainToken,
+	})
 }
 
 type updateUserRequest struct {
-	Name string  `json:"name"`
-	Role db.Role `json:"role"`
+	Name  string  `json:"name"`
+	Email string  `json:"email"`
+	Role  db.Role `json:"role"`
 }
 
-// UpdateUser updates a user's name or role. Superuser-only for role changes.
 func (h *handler) UpdateUser(c *fiber.Ctx) error {
 	claims := auth.GetClaims(c)
 	targetID, err := c.ParamsInt("id")
@@ -85,7 +120,6 @@ func (h *handler) UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
 	}
 
-	// Cannot modify a user with equal or higher rank
 	if db.RoleRank(target.Role) >= db.RoleRank(claims.Role) && int64(targetID) != claims.UserID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "cannot modify a user with equal or higher role"})
 	}
@@ -98,9 +132,26 @@ func (h *handler) UpdateUser(c *fiber.Ctx) error {
 	if req.Name != "" {
 		target.Name = req.Name
 	}
+	if req.Email != "" && req.Email != target.Email {
+		// Check uniqueness before updating
+		exists, err := h.db.NewSelect().Model((*db.User)(nil)).
+			Where("email = ? AND id != ?", req.Email, targetID).
+			Exists(context.Background())
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "db error"})
+		}
+		if exists {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "email already in use"})
+		}
+		target.Email = req.Email
+	}
 	if req.Role != "" {
 		if claims.Role != db.RoleSuperuser {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "only superuser can change roles"})
+		}
+		// A superuser cannot demote themselves — only another superuser can do that
+		if int64(targetID) == claims.UserID && req.Role != db.RoleSuperuser {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "superusers cannot demote themselves — another superuser must do it"})
 		}
 		target.Role = req.Role
 	}
@@ -113,7 +164,113 @@ func (h *handler) UpdateUser(c *fiber.Ctx) error {
 	return c.JSON(target)
 }
 
-// DeleteUser deletes a user. Superuser only.
+type generateResetRequest struct {
+	ExpiryDays int `json:"expiry_days"`
+}
+
+// GenerateResetLink creates a password-reset token for an existing activated user.
+// Superuser only. Returns the plain token so the superuser can share it out-of-band.
+func (h *handler) GenerateResetLink(c *fiber.Ctx) error {
+	targetID, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user id"})
+	}
+
+	var user db.User
+	if err := h.db.NewSelect().Model(&user).Where("id = ?", targetID).Scan(context.Background()); err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+	if user.ActivatedAt == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "user has not activated their account yet"})
+	}
+
+	var req generateResetRequest
+	_ = c.BodyParser(&req)
+	expiryDays := req.ExpiryDays
+	if expiryDays <= 0 {
+		expiryDays = 1
+	}
+
+	plainToken, hashedToken, err := generateWelcomeToken()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to generate token"})
+	}
+
+	expiresAt := time.Now().Add(time.Duration(expiryDays) * 24 * time.Hour)
+	user.ResetToken = hashedToken
+	user.ResetTokenExpiresAt = &expiresAt
+	user.UpdatedAt = time.Now()
+
+	if _, err := h.db.NewUpdate().Model(&user).WherePK().Exec(context.Background()); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to generate reset link"})
+	}
+
+	return c.JSON(fiber.Map{
+		"user":        user,
+		"reset_token": plainToken,
+	})
+}
+
+type reinviteRequest struct {
+	ExpiryDays int `json:"expiry_days"`
+}
+
+// ReinviteUser regenerates the welcome token for a user who hasn't activated yet.
+func (h *handler) ReinviteUser(c *fiber.Ctx) error {
+	targetID, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user id"})
+	}
+
+	var user db.User
+	if err := h.db.NewSelect().Model(&user).Where("id = ?", targetID).Scan(context.Background()); err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+	if user.ActivatedAt != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "user has already activated their account"})
+	}
+
+	var req reinviteRequest
+	_ = c.BodyParser(&req)
+	expiryDays := req.ExpiryDays
+	if expiryDays <= 0 {
+		expiryDays = 7
+	}
+
+	plainToken, hashedToken, err := generateWelcomeToken()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to generate token"})
+	}
+
+	expiresAt := time.Now().Add(time.Duration(expiryDays) * 24 * time.Hour)
+	user.WelcomeToken = hashedToken
+	user.WelcomeTokenExpiresAt = &expiresAt
+	user.UpdatedAt = time.Now()
+
+	if _, err := h.db.NewUpdate().Model(&user).WherePK().Exec(context.Background()); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to regenerate invite"})
+	}
+
+	return c.JSON(fiber.Map{
+		"user":          user,
+		"welcome_token": plainToken,
+	})
+}
+
+// GetInviteInfo returns the name and email for a pending (non-activated) invite.
+// Public endpoint — used by the activate page to greet the invitee.
+func (h *handler) GetInviteInfo(c *fiber.Ctx) error {
+	id := c.Params("uuid")
+	var user db.User
+	err := h.db.NewSelect().Model(&user).
+		Where("uuid = ? AND welcome_token != ''", id).
+		Scan(context.Background())
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "invite not found"})
+	}
+	return c.JSON(fiber.Map{"name": user.Name, "email": user.Email})
+}
+
 func (h *handler) DeleteUser(c *fiber.Ctx) error {
 	claims := auth.GetClaims(c)
 	targetID, err := c.ParamsInt("id")
@@ -121,7 +278,6 @@ func (h *handler) DeleteUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user id"})
 	}
 
-	// Superuser cannot delete themselves
 	if int64(targetID) == claims.UserID {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot delete your own account"})
 	}

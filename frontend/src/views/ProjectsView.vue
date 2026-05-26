@@ -84,18 +84,22 @@
                 </div>
               </div>
               <div class="flex items-center gap-1 shrink-0">
-                <button
-                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  @click="openEdit(project)"
-                >
-                  <Pencil class="size-3.5" />
-                </button>
-                <button
-                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  @click="openDelete(project)"
-                >
-                  <Trash2 class="size-3.5" />
-                </button>
+                <Tooltip :text="$t('common.edit')">
+                  <button
+                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    @click="openEdit(project)"
+                  >
+                    <Pencil class="size-3.5" />
+                  </button>
+                </Tooltip>
+                <Tooltip :text="$t('common.delete')">
+                  <button
+                    class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    @click="openDelete(project)"
+                  >
+                    <Trash2 class="size-3.5" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           </div>
@@ -141,6 +145,7 @@ import { timeAgo } from '@/lib/utils'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
 import EditProjectDialog from '@/components/EditProjectDialog.vue'
 import DeleteProjectDialog from '@/components/DeleteProjectDialog.vue'
+import { Tooltip } from '@/components/ui/tooltip'
 
 const LIMIT = 20
 

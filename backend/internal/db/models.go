@@ -89,16 +89,22 @@ func RoleRank(r Role) int {
 }
 
 type User struct {
-	bun.BaseModel `bun:"table:users"`
-	ID            int64     `bun:"id,pk,autoincrement" json:"id"`
-	Name          string    `bun:"name,notnull" json:"name"`
-	Email         string    `bun:"email,notnull,unique" json:"email"`
-	PasswordHash  string    `bun:"password_hash,notnull" json:"-"`
-	Role          Role      `bun:"role,notnull" json:"role"`
-	Locale        string    `bun:"locale,notnull,default:'en'" json:"locale"`
-	CreatedBy     *int64    `bun:"created_by" json:"created_by,omitempty"`
-	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
-	UpdatedAt     time.Time `bun:"updated_at,notnull,default:current_timestamp" json:"updated_at"`
+	bun.BaseModel         `bun:"table:users"`
+	ID                    int64      `bun:"id,pk,autoincrement"                          json:"id"`
+	Name                  string     `bun:"name,notnull"                                 json:"name"`
+	Email                 string     `bun:"email,notnull,unique"                         json:"email"`
+	UUID                  string     `bun:"uuid,notnull,default:''"                      json:"uuid"`
+	PasswordHash          string     `bun:"password_hash,notnull"                        json:"-"`
+	Role                  Role       `bun:"role,notnull"                                 json:"role"`
+	Locale                string     `bun:"locale,notnull,default:'en'"                  json:"locale"`
+	WelcomeToken          string     `bun:"welcome_token,notnull"                        json:"-"`
+	WelcomeTokenExpiresAt *time.Time `bun:"welcome_token_expires_at,nullzero"            json:"-"`
+	ResetToken            string     `bun:"reset_token,notnull"                          json:"-"`
+	ResetTokenExpiresAt   *time.Time `bun:"reset_token_expires_at,nullzero"              json:"-"`
+	ActivatedAt           *time.Time `bun:"activated_at,nullzero"                        json:"activated_at,omitempty"`
+	CreatedBy             *int64     `bun:"created_by"                                   json:"created_by,omitempty"`
+	CreatedAt             time.Time  `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
+	UpdatedAt             time.Time  `bun:"updated_at,notnull,default:current_timestamp" json:"updated_at"`
 }
 
 type AuditEntry struct {
