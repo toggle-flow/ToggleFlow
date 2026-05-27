@@ -40,6 +40,7 @@
               @keydown.enter.prevent="addTag"
               @keydown.backspace="onBackspace"
               @keydown="(e: KeyboardEvent) => e.key === ',' && (e.preventDefault(), addTag(e))"
+              @paste="onPaste"
             />
           </div>
           <p class="text-xs text-muted-foreground">{{ $t('segments.valuesHint') }}</p>
@@ -127,6 +128,22 @@ function removeTag(vi: number) {
 function onBackspace(e: KeyboardEvent) {
   const input = e.target as HTMLInputElement
   if (input.value === '' && values.value.length > 0) values.value.pop()
+}
+
+function onPaste(e: ClipboardEvent) {
+  const pasted = e.clipboardData?.getData('text') ?? ''
+  if (!pasted.includes(',') && !pasted.includes('\n')) return
+  e.preventDefault()
+  const input = e.target as HTMLInputElement
+  const parts = (input.value + pasted)
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  for (const part of parts) {
+    const parsed = parseValue(part)
+    if (!values.value.includes(parsed)) values.value.push(parsed)
+  }
+  input.value = ''
 }
 
 async function submit() {

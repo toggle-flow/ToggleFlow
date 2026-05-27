@@ -160,6 +160,7 @@
                               (e: KeyboardEvent) =>
                                 e.key === ',' && (e.preventDefault(), addTag(cond, e))
                             "
+                            @paste="(e: ClipboardEvent) => onTagPaste(cond, e)"
                           />
                         </div>
                         <!-- segment picker -->
@@ -461,6 +462,21 @@ function onTagBackspace(cond: Condition, event: KeyboardEvent) {
   if (input.value === '' && cond.values.length > 0) {
     cond.values.pop()
   }
+}
+
+function onTagPaste(cond: Condition, e: ClipboardEvent) {
+  const pasted = e.clipboardData?.getData('text') ?? ''
+  if (!pasted.includes(',') && !pasted.includes('\n')) return
+  e.preventDefault()
+  const input = e.target as HTMLInputElement
+  const parts = (input.value + pasted)
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  for (const part of parts) {
+    if (!cond.values.includes(part)) cond.values.push(part)
+  }
+  input.value = ''
 }
 
 async function save() {
