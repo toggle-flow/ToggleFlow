@@ -202,7 +202,7 @@ const projectNavItems = computed(() => {
   ]
   if (authStore.isAdmin) {
     items.push({
-      to: '/api-keys',
+      to: '/keys',
       icon: KeyRound,
       label: t('nav.apiKeys'),
       color: 'oklch(0.54 0.12 265)',
