@@ -159,7 +159,7 @@ async function load() {
   }
 }
 
-watch(() => projectStore.current, load, { immediate: true })
+watch(() => projectStore.current?.id, load, { immediate: true })
 
 function openEdit(seg: Segment) {
   editTarget.value = seg
