@@ -40,7 +40,8 @@
     "audit": "Audit Log",
     "administration": "Administration",
     "users": "Users",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "apiKeys": "API Keys"
   },
   "roles": {
     "superuser": "Superuser",
@@ -133,6 +134,8 @@
     "emptyDescription": "Environments let you control flag states independently across dev, staging, and prod.",
     "sdkKey": "SDK Key",
     "copied": "Copied!",
+    "rotateSdkKey": "Rotate key",
+    "rotatingSdkKey": "Rotating...",
     "editTitle": "Edit environment",
     "editDescription": "Update the name, key, description, or protection setting.",
     "protected": "Protected",
@@ -235,6 +238,30 @@
       "dark": "Dark",
       "system": "System"
     }
+  },
+  "keys": {
+    "add": "Add key",
+    "loading": "Loading...",
+    "noKeys": "No keys yet",
+    "label": "Label",
+    "labelPlaceholder": "e.g. Production CI",
+    "expiry": "Expires",
+    "expiryNever": "Never",
+    "expiry30d": "30 days",
+    "expiry90d": "90 days",
+    "expiry1y": "1 year",
+    "expiryCustom": "Custom date",
+    "create": "Create key",
+    "creating": "Creating...",
+    "done": "Done",
+    "copyNow": "Copy this key now — it won't be shown again.",
+    "keyValue": "Key",
+    "createSdkTitle": "Create SDK key",
+    "createSdkDescription": "SDK keys authenticate your server-side SDK clients against this environment.",
+    "createApiTitle": "Create API key",
+    "createApiDescription": "API keys allow programmatic access to manage flags in this project.",
+    "apiKeysTitle": "API Keys",
+    "apiKeysSubtitle": "Manage programmatic access to this project"
   },
   "common": {
     "cancel": "Cancel",

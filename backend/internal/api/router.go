@@ -21,12 +21,12 @@ func Register(app *fiber.App, database *bun.DB, broker *stream.Broker) {
 	app.Post("/api/auth/reset", h.ResetPassword)
 	app.Get("/api/auth/reset/:uuid", h.GetResetInfo)
 
-	// Authenticated — all roles
-	protected := app.Group("/api", auth.Require)
+	// Authenticated — JWT or project-scoped API key
+	protected := app.Group("/api", h.requireAuth)
 	protected.Get("/auth/me", h.Me)
 	protected.Patch("/auth/profile", h.UpdateProfile)
 
-	// User management — Admin and above
+	// User management — Admin and above (JWT only, API keys can't manage users)
 	users := protected.Group("/users", auth.RequireRole(db.RoleAdmin))
 	users.Get("/", h.ListUsers)
 	users.Post("/", h.CreateUser)
@@ -54,7 +54,7 @@ func Register(app *fiber.App, database *bun.DB, broker *stream.Broker) {
 	flagsWrite.Patch("/:key/env", h.ToggleFlagEnv)
 	flagsWrite.Delete("/:key", h.DeleteFlag)
 
-	// Project + environment write ops — Owner and above (plus membership gate in handlers)
+	// Project + environment write ops — Owner and above
 	projectsOwner := protected.Group("/projects", auth.RequireRole(db.RoleOwner))
 	projectsOwner.Post("/", h.CreateProject)
 	projectsOwner.Patch("/:id", h.UpdateProject)
@@ -62,6 +62,12 @@ func Register(app *fiber.App, database *bun.DB, broker *stream.Broker) {
 	projectsOwner.Post("/:pid/environments", h.CreateEnvironment)
 	projectsOwner.Patch("/:pid/environments/:eid", h.UpdateEnvironment)
 	projectsOwner.Delete("/:pid/environments/:eid", h.DeleteEnvironment)
+	projectsOwner.Get("/:pid/environments/:eid/sdk-keys", h.ListSDKKeys)
+	projectsOwner.Post("/:pid/environments/:eid/sdk-keys", h.CreateSDKKey)
+	projectsOwner.Delete("/:pid/environments/:eid/sdk-keys/:kid", h.DeleteSDKKey)
+	projectsOwner.Get("/:pid/api-keys", h.ListAPIKeys)
+	projectsOwner.Post("/:pid/api-keys", h.CreateAPIKey)
+	projectsOwner.Delete("/:pid/api-keys/:kid", h.DeleteAPIKey)
 	projectsOwner.Post("/:pid/members", h.AddMember)
 	projectsOwner.Delete("/:pid/members/:uid", h.RemoveMember)
 

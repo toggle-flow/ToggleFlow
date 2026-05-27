@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/uptrace/bun"
@@ -25,19 +26,35 @@ type SDKFlagConfig struct {
 	Rules            json.RawMessage `json:"rules"`
 }
 
-func (h *handler) SDKGetFlags(c *fiber.Ctx) error {
-	sdkKey := c.Query("sdk_key")
+func (h *handler) sdkEnvironment(c *fiber.Ctx, sdkKey string) (*db.Environment, error) {
 	if sdkKey == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "sdk_key is required"})
+		_ = c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "sdk_key is required"})
+		return nil, fiber.ErrUnauthorized
+	}
+	ctx := context.Background()
+	var key db.SDKKey
+	if err := h.db.NewSelect().Model(&key).
+		Where("key_hash = ?", hashKey(sdkKey)).
+		Where("expires_at IS NULL OR expires_at > ?", time.Now()).
+		Scan(ctx); err != nil {
+		_ = c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid sdk_key"})
+		return nil, fiber.ErrUnauthorized
+	}
+	var env db.Environment
+	if err := h.db.NewSelect().Model(&env).Where("id = ?", key.EnvironmentID).Scan(ctx); err != nil {
+		_ = c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid sdk_key"})
+		return nil, fiber.ErrUnauthorized
+	}
+	return &env, nil
+}
+
+func (h *handler) SDKGetFlags(c *fiber.Ctx) error {
+	env, err := h.sdkEnvironment(c, c.Query("sdk_key"))
+	if err != nil {
+		return nil
 	}
 
 	ctx := context.Background()
-
-	var env db.Environment
-	if err := h.db.NewSelect().Model(&env).Where("sdk_key = ?", sdkKey).Scan(ctx); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid sdk_key"})
-	}
-
 	var flags []db.Flag
 	if err := h.db.NewSelect().Model(&flags).Where("project_id = ?", env.ProjectID).OrderExpr("created_at ASC").Scan(ctx); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to fetch flags"})
@@ -119,13 +136,12 @@ func (h *handler) SDKEvaluate(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "flag_key is required"})
 	}
 
-	ctx := context.Background()
-
-	var env db.Environment
-	if err := h.db.NewSelect().Model(&env).Where("sdk_key = ?", req.SDKKey).Scan(ctx); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid sdk_key"})
+	env, err := h.sdkEnvironment(c, req.SDKKey)
+	if err != nil {
+		return nil
 	}
 
+	ctx := context.Background()
 	var flag db.Flag
 	if err := h.db.NewSelect().Model(&flag).Where("project_id = ? AND key = ?", env.ProjectID, req.FlagKey).Scan(ctx); err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "flag not found"})
@@ -165,15 +181,9 @@ func (h *handler) SDKEvaluate(c *fiber.Ctx) error {
 }
 
 func (h *handler) SDKStream(c *fiber.Ctx) error {
-	sdkKey := c.Query("sdk_key")
-	if sdkKey == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "sdk_key is required"})
-	}
-
-	ctx := context.Background()
-	var env db.Environment
-	if err := h.db.NewSelect().Model(&env).Where("sdk_key = ?", sdkKey).Scan(ctx); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid sdk_key"})
+	env, err := h.sdkEnvironment(c, c.Query("sdk_key"))
+	if err != nil {
+		return nil
 	}
 
 	ch := h.broker.Subscribe()

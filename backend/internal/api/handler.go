@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/uptrace/bun"
@@ -10,6 +12,8 @@ import (
 	"toggleflow/internal/db"
 	"toggleflow/internal/stream"
 )
+
+const apiKeyProjectLocal = "api_key_project_id"
 
 // Page is the standard paginated response shape for all list endpoints.
 // Using Go generics (available since 1.18) so every handler returns the same
@@ -52,6 +56,30 @@ func newHandler(db *bun.DB, broker *stream.Broker) *handler {
 	return &handler{db: db, broker: broker}
 }
 
+// requireAuth is a Fiber middleware that accepts either a JWT or a project-scoped API key.
+// API keys have the prefix "tfk_" and are stored as SHA-256 hashes in the api_keys table.
+func (h *handler) requireAuth(c *fiber.Ctx) error {
+	header := c.Get("Authorization")
+	token := strings.TrimPrefix(header, "Bearer ")
+
+	if strings.HasPrefix(token, "tfk_") {
+		var key db.APIKey
+		err := h.db.NewSelect().Model(&key).
+			Where("key_hash = ?", hashKey(token)).
+			Where("expires_at IS NULL OR expires_at > ?", time.Now()).
+			Scan(context.Background())
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid api key"})
+		}
+		c.Locals(apiKeyProjectLocal, key.ProjectID)
+		// Synthesise claims so downstream role checks work.
+		c.Locals("claims", &auth.Claims{Role: db.RoleOwner})
+		return c.Next()
+	}
+
+	return auth.Require(c)
+}
+
 func (h *handler) Health(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "ok"})
 }
@@ -59,6 +87,13 @@ func (h *handler) Health(c *fiber.Ctx) error {
 // checkProjectAccess returns nil if the caller is admin/superuser or is an explicit
 // member of the project. Otherwise it writes a 403 and returns a non-nil error.
 func (h *handler) checkProjectAccess(c *fiber.Ctx, pid int64) error {
+	// API key requests are pre-scoped to a single project.
+	if scopedPID, ok := c.Locals(apiKeyProjectLocal).(int64); ok {
+		if scopedPID != pid {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "api key is not scoped to this project"})
+		}
+		return nil
+	}
 	claims := auth.GetClaims(c)
 	if db.RoleRank(claims.Role) >= db.RoleRank(db.RoleAdmin) {
 		return nil

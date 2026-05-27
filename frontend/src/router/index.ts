@@ -27,6 +27,12 @@ const router = createRouter({
         { path: 'members', name: 'members', component: () => import('@/views/MembersView.vue') },
         { path: 'audit', name: 'audit', component: () => import('@/views/AuditView.vue') },
         {
+          path: 'api-keys',
+          name: 'api-keys',
+          component: () => import('@/views/APIKeysView.vue'),
+          meta: { requiresAdmin: true },
+        },
+        {
           path: 'users',
           name: 'users',
           component: () => import('@/views/UsersView.vue'),

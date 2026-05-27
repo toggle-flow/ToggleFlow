@@ -8,9 +8,26 @@ export interface Environment {
   key: string
   description: string
   protected: boolean
-  sdk_key: string
   created_at: string
   updated_at: string
+}
+
+export interface SDKKeyRecord {
+  id: number
+  environment_id: number
+  label: string
+  key_prefix: string
+  expires_at?: string
+  created_at: string
+}
+
+export interface APIKeyRecord {
+  id: number
+  project_id: number
+  label: string
+  key_prefix: string
+  expires_at?: string
+  created_at: string
 }
 
 export const environmentsApi = {
@@ -58,4 +75,46 @@ export const environmentsApi = {
       useToastStore().show('deleted environment')
       return r
     }),
+  sdkKeys: {
+    list: (projectId: number, envId: number) =>
+      api.get<SDKKeyRecord[]>(`/projects/${projectId}/environments/${envId}/sdk-keys`),
+    create: (projectId: number, envId: number, label: string, expiresAt: string | null) =>
+      api
+        .post<{
+          key: string
+          record: SDKKeyRecord
+        }>(`/projects/${projectId}/environments/${envId}/sdk-keys`, {
+          label,
+          expires_at: expiresAt || undefined,
+        })
+        .then((r) => {
+          useToastStore().show('created sdk key')
+          return r
+        }),
+    delete: (projectId: number, envId: number, keyId: number) =>
+      api
+        .delete<void>(`/projects/${projectId}/environments/${envId}/sdk-keys/${keyId}`)
+        .then((r) => {
+          useToastStore().show('deleted sdk key')
+          return r
+        }),
+  },
+  apiKeys: {
+    list: (projectId: number) => api.get<APIKeyRecord[]>(`/projects/${projectId}/api-keys`),
+    create: (projectId: number, label: string, expiresAt: string | null) =>
+      api
+        .post<{ key: string; record: APIKeyRecord }>(`/projects/${projectId}/api-keys`, {
+          label,
+          expires_at: expiresAt || undefined,
+        })
+        .then((r) => {
+          useToastStore().show('created api key')
+          return r
+        }),
+    delete: (projectId: number, keyId: number) =>
+      api.delete<void>(`/projects/${projectId}/api-keys/${keyId}`).then((r) => {
+        useToastStore().show('deleted api key')
+        return r
+      }),
+  },
 }

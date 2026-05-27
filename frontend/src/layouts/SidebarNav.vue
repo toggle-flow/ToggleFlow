@@ -159,6 +159,7 @@ import {
   ClipboardList,
   Users,
   UserCheck,
+  KeyRound,
   LogOut,
   Settings,
   ChevronsUpDown,
@@ -186,13 +187,29 @@ const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const createDialogOpen = ref(false)
 
-const projectNavItems = computed(() => [
-  { to: '/projects', icon: FolderOpen, label: t('nav.projects'), color: 'oklch(0.56 0.12 22)' },
-  { to: '/flags', icon: Flag, label: t('nav.flags'), color: 'oklch(0.60 0.11 245)' },
-  { to: '/environments', icon: Globe, label: t('nav.environments'), color: 'oklch(0.60 0.14 55)' },
-  { to: '/members', icon: UserCheck, label: t('nav.members'), color: 'oklch(0.52 0.12 290)' },
-  { to: '/audit', icon: ClipboardList, label: t('nav.audit'), color: 'oklch(0.58 0.10 175)' },
-])
+const projectNavItems = computed(() => {
+  const items = [
+    { to: '/projects', icon: FolderOpen, label: t('nav.projects'), color: 'oklch(0.56 0.12 22)' },
+    { to: '/flags', icon: Flag, label: t('nav.flags'), color: 'oklch(0.60 0.11 245)' },
+    {
+      to: '/environments',
+      icon: Globe,
+      label: t('nav.environments'),
+      color: 'oklch(0.60 0.14 55)',
+    },
+    { to: '/members', icon: UserCheck, label: t('nav.members'), color: 'oklch(0.52 0.12 290)' },
+    { to: '/audit', icon: ClipboardList, label: t('nav.audit'), color: 'oklch(0.58 0.10 175)' },
+  ]
+  if (authStore.isAdmin) {
+    items.push({
+      to: '/api-keys',
+      icon: KeyRound,
+      label: t('nav.apiKeys'),
+      color: 'oklch(0.54 0.12 265)',
+    })
+  }
+  return items
+})
 
 // Deterministic color from project name — cycles through a fixed palette
 const PROJECT_COLORS = [

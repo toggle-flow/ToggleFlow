@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"strconv"
 	"strings"
 	"time"
@@ -67,7 +65,7 @@ func (h *handler) CreateEnvironment(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name is required"})
 	}
 
-	sdkKey, err := generateSDKKey()
+	rawSDKKey, keyHash, keyPrefix, err := generateRawKey("sdk_")
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to generate sdk key"})
 	}
@@ -77,23 +75,34 @@ func (h *handler) CreateEnvironment(c *fiber.Ctx) error {
 		key = slugify(req.Name)
 	}
 
+	ctx := context.Background()
 	env := &db.Environment{
 		ProjectID:   pid,
 		Name:        req.Name,
 		Key:         key,
 		Description: req.Description,
 		Protected:   req.Protected,
-		SDKKey:      sdkKey,
+		SDKKey:      rawSDKKey, // kept for schema compat, not returned in API
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
-	if _, err := h.db.NewInsert().Model(env).Exec(context.Background()); err != nil {
+	if _, err := h.db.NewInsert().Model(env).Exec(ctx); err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "an environment with that name already exists"})
 		}
 		return c.Status(500).JSON(fiber.Map{"error": "failed to create environment"})
 	}
+
+	// Create the initial SDK key entry in sdk_keys table.
+	sdkKeyRecord := &db.SDKKey{
+		EnvironmentID: env.ID,
+		Label:         "Default",
+		KeyHash:       keyHash,
+		KeyPrefix:     keyPrefix,
+		CreatedAt:     time.Now(),
+	}
+	_, _ = h.db.NewInsert().Model(sdkKeyRecord).Exec(ctx)
 
 	h.writeAudit(pid, h.actorName(c), "env.created", env.Key, "",
 		toJSON(map[string]any{"name": env.Name, "key": env.Key}))
@@ -183,12 +192,4 @@ func (h *handler) DeleteEnvironment(c *fiber.Ctx) error {
 		toJSON(map[string]any{"name": env.Name, "key": env.Key}), "")
 
 	return c.SendStatus(fiber.StatusNoContent)
-}
-
-func generateSDKKey() (string, error) {
-	b := make([]byte, 24)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return "sdk_" + hex.EncodeToString(b), nil
 }

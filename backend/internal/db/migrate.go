@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 
 	"github.com/uptrace/bun"
 )
@@ -19,6 +21,8 @@ func Migrate(db *bun.DB) error {
 		(*FlagEnvironment)(nil),
 		(*AuditEntry)(nil),
 		(*ProjectMember)(nil),
+		(*SDKKey)(nil),
+		(*APIKey)(nil),
 	}
 
 	for _, model := range models {
@@ -53,6 +57,33 @@ func Migrate(db *bun.DB) error {
 		`INSERT OR IGNORE INTO project_members (project_id, user_id, created_at) SELECT p.id, u.id, CURRENT_TIMESTAMP FROM projects p CROSS JOIN users u`,
 	} {
 		_, _ = db.ExecContext(ctx, stmt)
+	}
+
+	// Migrate existing environment sdk_key values into the sdk_keys table.
+	// We hash the key in Go since SQLite has no sha256() function.
+	var envs []struct {
+		ID     int64  `bun:"id"`
+		SDKKey string `bun:"sdk_key"`
+	}
+	if err := db.NewSelect().TableExpr("environments").
+		ColumnExpr("id, sdk_key").
+		Where("sdk_key != ''").
+		Scan(ctx, &envs); err == nil {
+		for _, e := range envs {
+			h := sha256.Sum256([]byte(e.SDKKey))
+			prefix := e.SDKKey
+			if len(prefix) > 12 {
+				prefix = prefix[:12]
+			}
+			_, _ = db.NewInsert().TableExpr("sdk_keys").
+				On("CONFLICT (key_hash) DO NOTHING").
+				Value("environment_id", "?", e.ID).
+				Value("label", "?", "Default").
+				Value("key_hash", "?", hex.EncodeToString(h[:])).
+				Value("key_prefix", "?", prefix).
+				Value("created_at", "CURRENT_TIMESTAMP").
+				Exec(ctx)
+		}
 	}
 
 	return nil

@@ -28,7 +28,7 @@ type Environment struct {
 	Key           string    `bun:"key,notnull"                                  json:"key"`
 	Description   string    `bun:"description,notnull,default:''"               json:"description"`
 	Protected     bool      `bun:"protected,notnull,default:false"              json:"protected"`
-	SDKKey        string    `bun:"sdk_key,notnull,unique"                       json:"sdk_key"`
+	SDKKey        string    `bun:"sdk_key,notnull,unique"                       json:"-"`
 	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
 	UpdatedAt     time.Time `bun:"updated_at,notnull,default:current_timestamp" json:"updated_at"`
 }
@@ -113,6 +113,28 @@ type ProjectMember struct {
 	ProjectID     int64     `bun:"project_id,pk,notnull"                        json:"project_id"`
 	UserID        int64     `bun:"user_id,pk,notnull"                           json:"user_id"`
 	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
+}
+
+type SDKKey struct {
+	bun.BaseModel `bun:"table:sdk_keys"`
+	ID            int64      `bun:"id,pk,autoincrement"                          json:"id"`
+	EnvironmentID int64      `bun:"environment_id,notnull"                       json:"environment_id"`
+	Label         string     `bun:"label,notnull"                                json:"label"`
+	KeyHash       string     `bun:"key_hash,notnull,unique"                      json:"-"`
+	KeyPrefix     string     `bun:"key_prefix,notnull"                           json:"key_prefix"`
+	ExpiresAt     *time.Time `bun:"expires_at,nullzero"                          json:"expires_at,omitempty"`
+	CreatedAt     time.Time  `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
+}
+
+type APIKey struct {
+	bun.BaseModel `bun:"table:api_keys"`
+	ID            int64      `bun:"id,pk,autoincrement"                          json:"id"`
+	ProjectID     int64      `bun:"project_id,notnull"                           json:"project_id"`
+	Label         string     `bun:"label,notnull"                                json:"label"`
+	KeyHash       string     `bun:"key_hash,notnull,unique"                      json:"-"`
+	KeyPrefix     string     `bun:"key_prefix,notnull"                           json:"key_prefix"`
+	ExpiresAt     *time.Time `bun:"expires_at,nullzero"                          json:"expires_at,omitempty"`
+	CreatedAt     time.Time  `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
 }
 
 type AuditEntry struct {
