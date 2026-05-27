@@ -103,6 +103,12 @@
     "variationName": "Name",
     "variationValue": "Value",
     "addVariation": "Add variation",
+    "deleteTitle": "Delete flag",
+    "deleteWarning": "This will permanently delete",
+    "deleteWarningEnd": "and its state across all environments.",
+    "deleting": "Deleting...",
+    "deleteConfirmButton": "Delete flag",
+    "deleteConfirmCountdown": "Delete flag ({countdown}s)",
     "history": "Flag history",
     "historyTitle": "Flag history",
     "types": {
@@ -132,6 +138,12 @@
     "protectedLabel": "Protected environment",
     "protectedDescription": "Only admins can toggle flags in this environment.",
     "protectedNote": "Protected — only admins can change flag states",
+    "deleteTitle": "Delete environment",
+    "deleteWarning": "This will permanently delete",
+    "deleteWarningEnd": "and remove all flag states associated with it.",
+    "deleting": "Deleting...",
+    "deleteConfirmButton": "Delete environment",
+    "deleteConfirmCountdown": "Delete environment ({countdown}s)",
     "history": "Environment history",
     "historyTitle": "Environment history"
   },
@@ -183,6 +195,12 @@
     "editTitle": "Edit user",
     "editDescription": "Update the user's name or role.",
     "deleteTitle": "Remove user",
+    "deleteSubtitle": "This action cannot be undone",
+    "deleteWarning": "This will permanently remove",
+    "deleteWarningEnd": "from the system. They will lose all access immediately.",
+    "deleting": "Removing...",
+    "deleteConfirmButton": "Remove user",
+    "deleteConfirmCountdown": "Remove user ({countdown}s)",
     "you": "you",
     "history": "User history",
     "historyTitle": "User history"
@@ -224,7 +242,9 @@
     "copyLink": "Copy link",
     "copySecret": "Copy secret",
     "description": "Description",
-    "descriptionPlaceholder": "Optional description"
+    "descriptionPlaceholder": "Optional description",
+    "cannotUndo": "This action cannot be undone",
+    "error": "Something went wrong"
   },
   "reset": {
     "title": "Reset your password",

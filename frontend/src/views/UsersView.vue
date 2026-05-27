@@ -33,7 +33,7 @@
         </p>
       </div>
 
-      <div v-else class="space-y-2">
+      <div v-else class="section-users space-y-2">
         <div v-for="user in users" :key="user.id" class="rounded-lg border bg-card p-4">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">

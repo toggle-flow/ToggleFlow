@@ -74,15 +74,20 @@
       <button
         v-for="item in projectNavItems"
         :key="item.to"
-        class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors"
+        class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors border-l-[3px]"
         :class="
           isActive(item.to)
             ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
-            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+            : 'border-l-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
         "
+        :style="isActive(item.to) ? { borderLeftColor: item.color } : {}"
         @click="navigate(item.to)"
       >
-        <component :is="item.icon" class="size-4 shrink-0" />
+        <component
+          :is="item.icon"
+          class="size-4 shrink-0"
+          :style="isActive(item.to) ? { color: item.color } : {}"
+        />
         {{ item.label }}
       </button>
     </div>
@@ -95,15 +100,19 @@
         {{ $t('nav.administration') }}
       </p>
       <button
-        class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors"
+        class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors border-l-[3px]"
         :class="
           isActive('/users')
             ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
-            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+            : 'border-l-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
         "
+        :style="isActive('/users') ? { borderLeftColor: 'oklch(0.54 0.12 265)' } : {}"
         @click="navigate('/users')"
       >
-        <Users class="size-4 shrink-0" />
+        <Users
+          class="size-4 shrink-0"
+          :style="isActive('/users') ? { color: 'oklch(0.54 0.12 265)' } : {}"
+        />
         {{ $t('nav.users') }}
       </button>
     </div>
@@ -178,11 +187,11 @@ const projectStore = useProjectStore()
 const createDialogOpen = ref(false)
 
 const projectNavItems = computed(() => [
-  { to: '/projects', icon: FolderOpen, label: t('nav.projects') },
-  { to: '/flags', icon: Flag, label: t('nav.flags') },
-  { to: '/environments', icon: Globe, label: t('nav.environments') },
-  { to: '/members', icon: UserCheck, label: t('nav.members') },
-  { to: '/audit', icon: ClipboardList, label: t('nav.audit') },
+  { to: '/projects', icon: FolderOpen, label: t('nav.projects'), color: 'oklch(0.56 0.12 22)' },
+  { to: '/flags', icon: Flag, label: t('nav.flags'), color: 'oklch(0.60 0.11 245)' },
+  { to: '/environments', icon: Globe, label: t('nav.environments'), color: 'oklch(0.60 0.14 55)' },
+  { to: '/members', icon: UserCheck, label: t('nav.members'), color: 'oklch(0.52 0.12 290)' },
+  { to: '/audit', icon: ClipboardList, label: t('nav.audit'), color: 'oklch(0.58 0.10 175)' },
 ])
 
 // Deterministic color from project name — cycles through a fixed palette

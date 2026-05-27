@@ -41,6 +41,8 @@
       />
     </Transition>
 
+    <ToastStack />
+
     <!-- Mobile drawer panel -->
     <Transition
       enter-from-class="-translate-x-full"
@@ -62,6 +64,7 @@
 import { ref, onMounted } from 'vue'
 import { Menu, ToggleRight } from '@lucide/vue'
 import SidebarNav from './SidebarNav.vue'
+import ToastStack from '@/components/ToastStack.vue'
 import { projectsApi } from '@/api/projects'
 import { useProjectStore } from '@/stores/project'
 

@@ -145,7 +145,7 @@ async function submit() {
     if (user.locale) setLocale(user.locale as Locale)
     router.push('/')
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Something went wrong'
+    error.value = e instanceof Error ? e.message : t('common.error')
   } finally {
     loading.value = false
   }

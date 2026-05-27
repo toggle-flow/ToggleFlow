@@ -103,6 +103,12 @@
     "variationName": "Name",
     "variationValue": "Wert",
     "addVariation": "Variation hinzufügen",
+    "deleteTitle": "Flag löschen",
+    "deleteWarning": "Folgendes wird dauerhaft gelöscht:",
+    "deleteWarningEnd": "sowie der gesamte Status in allen Umgebungen.",
+    "deleting": "Wird gelöscht...",
+    "deleteConfirmButton": "Flag löschen",
+    "deleteConfirmCountdown": "Flag löschen ({countdown}s)",
     "history": "Flag-Verlauf",
     "historyTitle": "Flag-Verlauf",
     "types": {
@@ -132,6 +138,12 @@
     "protectedLabel": "Geschützte Umgebung",
     "protectedDescription": "Nur Admins können Flags in dieser Umgebung umschalten.",
     "protectedNote": "Geschützt — nur Admins können Flag-Zustände ändern",
+    "deleteTitle": "Umgebung löschen",
+    "deleteWarning": "Folgendes wird dauerhaft gelöscht:",
+    "deleteWarningEnd": "und alle zugehörigen Flag-Zustände werden entfernt.",
+    "deleting": "Wird gelöscht...",
+    "deleteConfirmButton": "Umgebung löschen",
+    "deleteConfirmCountdown": "Umgebung löschen ({countdown}s)",
     "history": "Umgebungsverlauf",
     "historyTitle": "Umgebungsverlauf"
   },
@@ -183,6 +195,12 @@
     "editTitle": "Benutzer bearbeiten",
     "editDescription": "Name oder Rolle des Benutzers ändern.",
     "deleteTitle": "Benutzer entfernen",
+    "deleteSubtitle": "Diese Aktion kann nicht rückgängig gemacht werden",
+    "deleteWarning": "Folgendes wird dauerhaft entfernt:",
+    "deleteWarningEnd": "aus dem System. Der Zugriff wird sofort entzogen.",
+    "deleting": "Wird entfernt...",
+    "deleteConfirmButton": "Benutzer entfernen",
+    "deleteConfirmCountdown": "Benutzer entfernen ({countdown}s)",
     "you": "Sie",
     "history": "Benutzerverlauf",
     "historyTitle": "Benutzerverlauf"
@@ -224,7 +242,9 @@
     "copyLink": "Link kopieren",
     "copySecret": "Secret kopieren",
     "description": "Beschreibung",
-    "descriptionPlaceholder": "Optionale Beschreibung"
+    "descriptionPlaceholder": "Optionale Beschreibung",
+    "cannotUndo": "Diese Aktion kann nicht rückgängig gemacht werden",
+    "error": "Etwas ist schiefgelaufen"
   },
   "reset": {
     "title": "Passwort zurücksetzen",

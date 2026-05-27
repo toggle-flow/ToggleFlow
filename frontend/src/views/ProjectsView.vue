@@ -49,16 +49,13 @@
       </div>
 
       <template v-else>
-        <div class="min-h-0 flex-1 overflow-y-auto space-y-2">
+        <div class="section-projects min-h-0 flex-1 overflow-y-auto space-y-2">
           <div v-for="project in projects" :key="project.id" class="rounded-lg border bg-card p-4">
             <div class="flex items-start justify-between gap-4">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <p class="text-sm font-medium leading-none">{{ project.name }}</p>
-                  <span
-                    class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
-                    >{{ project.key }}</span
-                  >
+                  <CopyKey :value="project.key" />
                 </div>
                 <p v-if="project.description" class="mt-1 text-xs text-muted-foreground">
                   {{ project.description }}
@@ -146,6 +143,7 @@ import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
 import EditProjectDialog from '@/components/EditProjectDialog.vue'
 import DeleteProjectDialog from '@/components/DeleteProjectDialog.vue'
 import { Tooltip } from '@/components/ui/tooltip'
+import CopyKey from '@/components/CopyKey.vue'
 
 const LIMIT = 20
 

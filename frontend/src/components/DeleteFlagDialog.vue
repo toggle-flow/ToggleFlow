@@ -9,16 +9,16 @@
             <TriangleAlert class="size-4 text-destructive" />
           </div>
           <div>
-            <DialogTitle>Delete flag</DialogTitle>
-            <DialogDescription class="mt-0.5">This action cannot be undone</DialogDescription>
+            <DialogTitle>{{ $t('flags.deleteTitle') }}</DialogTitle>
+            <DialogDescription class="mt-0.5">{{ $t('common.cannotUndo') }}</DialogDescription>
           </div>
         </div>
       </DialogHeader>
 
       <p class="text-sm text-muted-foreground">
-        This will permanently delete
-        <span class="font-medium text-foreground">{{ flag?.name }}</span> and its state across all
-        environments.
+        {{ $t('flags.deleteWarning') }}
+        <span class="font-medium text-foreground">{{ flag?.name }}</span>
+        {{ $t('flags.deleteWarningEnd') }}
       </p>
 
       <Alert v-if="error" variant="destructive">
@@ -33,7 +33,11 @@
         <Button variant="destructive" :disabled="countdown > 0 || loading" @click="submit">
           <Loader2 v-if="loading" class="size-4 animate-spin" />
           {{
-            loading ? 'Deleting...' : countdown > 0 ? `Delete flag (${countdown}s)` : 'Delete flag'
+            loading
+              ? $t('flags.deleting')
+              : countdown > 0
+                ? $t('flags.deleteConfirmCountdown', { countdown })
+                : $t('flags.deleteConfirmButton')
           }}
         </Button>
       </DialogFooter>
@@ -43,6 +47,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { TriangleAlert, AlertCircle, Loader2 } from '@lucide/vue'
 import {
   Dialog,
@@ -56,6 +61,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { flagsApi, type Flag } from '@/api/flags'
 
+const { t } = useI18n()
 const props = defineProps<{ open: boolean; flag: Flag | null; projectId: number }>()
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -102,7 +108,7 @@ async function submit() {
     emit('deleted', props.flag)
     emit('update:open', false)
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Something went wrong'
+    error.value = e instanceof Error ? e.message : t('common.error')
   } finally {
     loading.value = false
   }

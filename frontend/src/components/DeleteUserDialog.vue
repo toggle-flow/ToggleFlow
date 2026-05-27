@@ -10,15 +10,15 @@
           </div>
           <div>
             <DialogTitle>{{ $t('users.deleteTitle') }}</DialogTitle>
-            <DialogDescription class="mt-0.5">This action cannot be undone</DialogDescription>
+            <DialogDescription class="mt-0.5">{{ $t('common.cannotUndo') }}</DialogDescription>
           </div>
         </div>
       </DialogHeader>
 
       <p class="text-sm text-muted-foreground">
-        This will permanently remove
-        <span class="font-medium text-foreground">{{ user?.name }}</span> from the system. They will
-        lose all access immediately.
+        {{ $t('users.deleteWarning') }}
+        <span class="font-medium text-foreground">{{ user?.name }}</span>
+        {{ $t('users.deleteWarningEnd') }}
       </p>
 
       <Alert v-if="error" variant="destructive">
@@ -33,7 +33,11 @@
         <Button variant="destructive" :disabled="countdown > 0 || loading" @click="submit">
           <Loader2 v-if="loading" class="size-4 animate-spin" />
           {{
-            loading ? 'Removing...' : countdown > 0 ? `Remove user (${countdown}s)` : 'Remove user'
+            loading
+              ? $t('users.deleting')
+              : countdown > 0
+                ? $t('users.deleteConfirmCountdown', { countdown })
+                : $t('users.deleteConfirmButton')
           }}
         </Button>
       </DialogFooter>
@@ -43,6 +47,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { TriangleAlert, AlertCircle, Loader2 } from '@lucide/vue'
 import {
   Dialog,
@@ -56,6 +61,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { usersApi, type User } from '@/api/users'
 
+const { t } = useI18n()
 const props = defineProps<{ open: boolean; user: User | null }>()
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -102,7 +108,7 @@ async function submit() {
     emit('deleted', props.user)
     emit('update:open', false)
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Something went wrong'
+    error.value = e instanceof Error ? e.message : t('common.error')
   } finally {
     loading.value = false
   }

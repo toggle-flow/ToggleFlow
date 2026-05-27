@@ -34,7 +34,7 @@
           <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
         </div>
 
-        <div v-else class="min-h-0 flex-1 overflow-y-auto space-y-1">
+        <div v-else class="section-members min-h-0 flex-1 overflow-y-auto space-y-1">
           <!-- Member count summary -->
           <p class="pb-2 text-xs text-muted-foreground">
             {{ memberCount }} {{ $t('members.ofTotal', { total: rows.length }) }}

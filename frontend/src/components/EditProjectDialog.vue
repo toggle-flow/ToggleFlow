@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { AlertCircle, Loader2 } from '@lucide/vue'
 import {
   Dialog,
@@ -77,6 +78,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { projectsApi, type Project } from '@/api/projects'
 
+const { t } = useI18n()
 const props = defineProps<{ open: boolean; project: Project | null }>()
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -149,7 +151,7 @@ async function submit() {
     emit('updated', updated)
     emit('update:open', false)
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Something went wrong'
+    error.value = e instanceof Error ? e.message : t('common.error')
   } finally {
     loading.value = false
   }

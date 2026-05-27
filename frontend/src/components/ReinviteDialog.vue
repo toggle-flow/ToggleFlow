@@ -94,6 +94,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { AlertCircle, Loader2, Copy, Check } from '@lucide/vue'
 import {
   Dialog,
@@ -109,6 +110,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { usersApi, type User } from '@/api/users'
 
+const { t } = useI18n()
 const props = defineProps<{ open: boolean; user: User | null }>()
 const emit = defineEmits<{ 'update:open': [value: boolean] }>()
 
@@ -148,7 +150,7 @@ async function generate() {
     welcomeLink.value = `${window.location.origin}/activate?id=${result.user.uuid}`
     phase.value = 'success'
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Something went wrong'
+    error.value = e instanceof Error ? e.message : t('common.error')
   } finally {
     loading.value = false
   }

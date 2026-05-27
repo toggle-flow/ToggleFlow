@@ -1,4 +1,5 @@
 import { api, type PageResult, type PageParams } from './client'
+import { useToastStore } from '@/stores/toast'
 
 export interface Project {
   id: number
@@ -14,8 +15,18 @@ export interface Project {
 export const projectsApi = {
   list: (params?: PageParams) => api.get<PageResult<Project>>('/projects', params),
   create: (name: string, key: string, description: string) =>
-    api.post<Project>('/projects', { name, key, description }),
+    api.post<Project>('/projects', { name, key, description }).then((r) => {
+      useToastStore().show('created project')
+      return r
+    }),
   update: (id: number, name: string, key: string, description: string) =>
-    api.patch<Project>(`/projects/${id}`, { name, key, description }),
-  delete: (id: number) => api.delete<void>(`/projects/${id}`),
+    api.patch<Project>(`/projects/${id}`, { name, key, description }).then((r) => {
+      useToastStore().show('updated project')
+      return r
+    }),
+  delete: (id: number) =>
+    api.delete<void>(`/projects/${id}`).then((r) => {
+      useToastStore().show('deleted project')
+      return r
+    }),
 }

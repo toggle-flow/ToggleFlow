@@ -46,7 +46,7 @@
           </p>
         </div>
 
-        <div v-else class="space-y-2">
+        <div v-else class="section-envs space-y-2">
           <div
             v-for="env in environments"
             :key="env.id"
@@ -56,10 +56,7 @@
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <p class="text-sm font-medium leading-none">{{ env.name }}</p>
-                  <span
-                    class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
-                    >{{ env.key }}</span
-                  >
+                  <CopyKey :value="env.key" />
                   <span
                     v-if="env.protected"
                     class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium bg-orange-500/10 text-orange-600 dark:text-orange-400"
@@ -174,6 +171,7 @@ import EditEnvironmentDialog from '@/components/EditEnvironmentDialog.vue'
 import DeleteEnvironmentDialog from '@/components/DeleteEnvironmentDialog.vue'
 import AuditHistorySheet from '@/components/AuditHistorySheet.vue'
 import { Tooltip } from '@/components/ui/tooltip'
+import CopyKey from '@/components/CopyKey.vue'
 
 const projectStore = useProjectStore()
 const environments = ref<Environment[]>([])

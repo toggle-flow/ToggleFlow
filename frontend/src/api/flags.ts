@@ -1,4 +1,5 @@
 import { api, type PageResult, type PageParams } from './client'
+import { useToastStore } from '@/stores/toast'
 
 export type FlagType = 'boolean' | 'string' | 'number' | 'json'
 
@@ -41,12 +42,20 @@ export const flagsApi = {
       flag_type: FlagType
       variations: Variation[]
     }
-  ) => api.post<Flag>(`/projects/${projectId}/flags`, data),
+  ) =>
+    api.post<Flag>(`/projects/${projectId}/flags`, data).then((r) => {
+      useToastStore().show('created flag')
+      return r
+    }),
   update: (
     projectId: number,
     flagKey: string,
     data: { name: string; description: string; variations: Variation[] }
-  ) => api.patch<Flag>(`/projects/${projectId}/flags/${flagKey}`, data),
+  ) =>
+    api.patch<Flag>(`/projects/${projectId}/flags/${flagKey}`, data).then((r) => {
+      useToastStore().show('updated flag')
+      return r
+    }),
   toggle: (
     projectId: number,
     flagKey: string,
@@ -54,11 +63,19 @@ export const flagsApi = {
     enabled: boolean,
     defaultVariation: number
   ) =>
-    api.patch<{ ok: boolean }>(`/projects/${projectId}/flags/${flagKey}/env`, {
-      environment_id: environmentId,
-      enabled,
-      default_variation: defaultVariation,
-    }),
+    api
+      .patch<{ ok: boolean }>(`/projects/${projectId}/flags/${flagKey}/env`, {
+        environment_id: environmentId,
+        enabled,
+        default_variation: defaultVariation,
+      })
+      .then((r) => {
+        useToastStore().show(enabled ? 'enabled flag' : 'disabled flag')
+        return r
+      }),
   delete: (projectId: number, flagKey: string) =>
-    api.delete<void>(`/projects/${projectId}/flags/${flagKey}`),
+    api.delete<void>(`/projects/${projectId}/flags/${flagKey}`).then((r) => {
+      useToastStore().show('deleted flag')
+      return r
+    }),
 }

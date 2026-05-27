@@ -1,4 +1,5 @@
 import { api, type PageResult, type PageParams } from './client'
+import { useToastStore } from '@/stores/toast'
 
 export interface Environment {
   id: number
@@ -22,12 +23,17 @@ export const environmentsApi = {
     description: string,
     isProtected: boolean
   ) =>
-    api.post<Environment>(`/projects/${projectId}/environments`, {
-      name,
-      key,
-      description,
-      protected: isProtected,
-    }),
+    api
+      .post<Environment>(`/projects/${projectId}/environments`, {
+        name,
+        key,
+        description,
+        protected: isProtected,
+      })
+      .then((r) => {
+        useToastStore().show('created environment')
+        return r
+      }),
   update: (
     projectId: number,
     envId: number,
@@ -36,12 +42,20 @@ export const environmentsApi = {
     description: string,
     isProtected: boolean
   ) =>
-    api.patch<Environment>(`/projects/${projectId}/environments/${envId}`, {
-      name,
-      key,
-      description,
-      protected: isProtected,
-    }),
+    api
+      .patch<Environment>(`/projects/${projectId}/environments/${envId}`, {
+        name,
+        key,
+        description,
+        protected: isProtected,
+      })
+      .then((r) => {
+        useToastStore().show('updated environment')
+        return r
+      }),
   delete: (projectId: number, envId: number) =>
-    api.delete<void>(`/projects/${projectId}/environments/${envId}`),
+    api.delete<void>(`/projects/${projectId}/environments/${envId}`).then((r) => {
+      useToastStore().show('deleted environment')
+      return r
+    }),
 }

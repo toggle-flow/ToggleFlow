@@ -40,7 +40,7 @@
         </div>
 
         <template v-else>
-          <div class="min-h-0 flex-1 overflow-y-auto space-y-2">
+          <div class="section-audit min-h-0 flex-1 overflow-y-auto space-y-2">
             <div
               v-for="entry in entries"
               :key="entry.id"

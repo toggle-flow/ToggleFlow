@@ -9,16 +9,16 @@
             <TriangleAlert class="size-4 text-destructive" />
           </div>
           <div>
-            <DialogTitle>Delete environment</DialogTitle>
-            <DialogDescription class="mt-0.5">This action cannot be undone</DialogDescription>
+            <DialogTitle>{{ $t('environments.deleteTitle') }}</DialogTitle>
+            <DialogDescription class="mt-0.5">{{ $t('common.cannotUndo') }}</DialogDescription>
           </div>
         </div>
       </DialogHeader>
 
       <p class="text-sm text-muted-foreground">
-        This will permanently delete
-        <span class="font-medium text-foreground">{{ environment?.name }}</span> and remove all flag
-        states associated with it.
+        {{ $t('environments.deleteWarning') }}
+        <span class="font-medium text-foreground">{{ environment?.name }}</span>
+        {{ $t('environments.deleteWarningEnd') }}
       </p>
 
       <Alert v-if="error" variant="destructive">
@@ -34,10 +34,10 @@
           <Loader2 v-if="loading" class="size-4 animate-spin" />
           {{
             loading
-              ? 'Deleting...'
+              ? $t('environments.deleting')
               : countdown > 0
-                ? `Delete environment (${countdown}s)`
-                : 'Delete environment'
+                ? $t('environments.deleteConfirmCountdown', { countdown })
+                : $t('environments.deleteConfirmButton')
           }}
         </Button>
       </DialogFooter>
@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { TriangleAlert, AlertCircle, Loader2 } from '@lucide/vue'
 import {
   Dialog,
@@ -60,6 +61,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { environmentsApi, type Environment } from '@/api/environments'
 
+const { t } = useI18n()
 const props = defineProps<{ open: boolean; environment: Environment | null; projectId: number }>()
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -106,7 +108,7 @@ async function submit() {
     emit('deleted', props.environment)
     emit('update:open', false)
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Something went wrong'
+    error.value = e instanceof Error ? e.message : t('common.error')
   } finally {
     loading.value = false
   }

@@ -62,7 +62,7 @@
         </div>
 
         <template v-else>
-          <div class="min-h-0 flex-1 overflow-y-auto space-y-2">
+          <div class="section-flags min-h-0 flex-1 overflow-y-auto space-y-2">
             <div v-for="flag in flags" :key="flag.id" class="rounded-lg border bg-card p-4">
               <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0 flex-1">
@@ -74,7 +74,7 @@
                     >
                       {{ flag.flag_type }}
                     </span>
-                    <span class="font-mono text-[11px] text-muted-foreground">{{ flag.key }}</span>
+                    <CopyKey :value="flag.key" />
                   </div>
 
                   <p v-if="flag.description" class="mt-1 text-xs text-muted-foreground">
@@ -261,6 +261,7 @@ import EditFlagDialog from '@/components/EditFlagDialog.vue'
 import DeleteFlagDialog from '@/components/DeleteFlagDialog.vue'
 import AuditHistorySheet from '@/components/AuditHistorySheet.vue'
 import { Tooltip } from '@/components/ui/tooltip'
+import CopyKey from '@/components/CopyKey.vue'
 
 const LIMIT = 20
 
