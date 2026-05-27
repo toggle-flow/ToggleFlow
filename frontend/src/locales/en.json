@@ -113,6 +113,7 @@
     "deleteConfirmCountdown": "Delete flag ({countdown}s)",
     "history": "Flag history",
     "historyTitle": "Flag history",
+    "rules": "Rules",
     "types": {
       "boolean": "Boolean",
       "string": "String",
@@ -269,6 +270,30 @@
     "sdkSectionDescription": "Authenticate your server-side SDK clients per environment",
     "apiSection": "API Keys",
     "apiSectionDescription": "Programmatic access to create and manage flags in this project"
+  },
+  "rules": {
+    "title": "Targeting Rules",
+    "description": "Rules are evaluated top to bottom. The first match wins.",
+    "empty": "No rules yet — all users get the default variation.",
+    "rule": "Rule",
+    "attribute": "Attribute",
+    "opGroupString": "String",
+    "opEquals": "equals",
+    "opIn": "is one of",
+    "opNotIn": "is not one of",
+    "opContains": "contains",
+    "opStartsWith": "starts with",
+    "opEndsWith": "ends with",
+    "opGroupNumeric": "Numeric",
+    "tagPlaceholder": "type + Enter",
+    "value": "Value",
+    "addCondition": "Add condition",
+    "serve": "Serve",
+    "addRule": "Add rule",
+    "saving": "Saving...",
+    "save": "Save rules",
+    "errorAttribute": "All conditions must have an attribute.",
+    "errorValue": "All conditions must have at least one value."
   },
   "common": {
     "cancel": "Cancel",

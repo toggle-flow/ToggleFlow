@@ -171,6 +171,19 @@
                       {{ v.name }}
                     </option>
                   </select>
+                  <!-- Rules button -->
+                  <button
+                    class="flex items-center gap-1 rounded border border-input px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    @click="openRules(flag, env)"
+                  >
+                    <ListFilter class="size-3 shrink-0" />
+                    {{ $t('flags.rules') }}
+                    <span
+                      v-if="env.rules?.length"
+                      class="rounded-full bg-primary/15 px-1 text-[10px] font-medium text-primary"
+                      >{{ env.rules.length }}</span
+                    >
+                  </button>
                 </div>
               </div>
               <p v-else class="mt-3 text-xs text-muted-foreground border-t pt-3">
@@ -229,6 +242,18 @@
     :title="$t('flags.historyTitle')"
     :label="historyTarget.key"
   />
+  <FlagRulesSheet
+    v-if="rulesSheetFlag && rulesSheetEnv && projectStore.current"
+    v-model:open="rulesSheetOpen"
+    :flag="rulesSheetFlag"
+    :env-state="rulesSheetEnv"
+    :project-id="projectStore.current.id"
+    @saved="
+      (r) => {
+        if (rulesSheetEnv) rulesSheetEnv.rules = r
+      }
+    "
+  />
 </template>
 
 <script setup lang="ts">
@@ -248,6 +273,7 @@ import {
   Clock,
   Lock,
   History,
+  ListFilter,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -262,6 +288,7 @@ import CreateFlagDialog from '@/components/CreateFlagDialog.vue'
 import EditFlagDialog from '@/components/EditFlagDialog.vue'
 import DeleteFlagDialog from '@/components/DeleteFlagDialog.vue'
 import AuditHistorySheet from '@/components/AuditHistorySheet.vue'
+import FlagRulesSheet from '@/components/FlagRulesSheet.vue'
 import { Tooltip } from '@/components/ui/tooltip'
 import CopyKey from '@/components/CopyKey.vue'
 
@@ -283,6 +310,9 @@ const deleteDialogOpen = ref(false)
 const deleteTarget = ref<Flag | null>(null)
 const historyOpen = ref(false)
 const historyTarget = ref<Flag | null>(null)
+const rulesSheetOpen = ref(false)
+const rulesSheetFlag = ref<Flag | null>(null)
+const rulesSheetEnv = ref<FlagEnvState | null>(null)
 const toggling = ref<Record<string, boolean>>({})
 
 function toggleKey(flagId: number, envId: number) {
@@ -341,6 +371,12 @@ function openDelete(flag: Flag) {
 function openHistory(flag: Flag) {
   historyTarget.value = flag
   historyOpen.value = true
+}
+
+function openRules(flag: Flag, env: FlagEnvState) {
+  rulesSheetFlag.value = flag
+  rulesSheetEnv.value = env
+  rulesSheetOpen.value = true
 }
 
 function onCreated() {

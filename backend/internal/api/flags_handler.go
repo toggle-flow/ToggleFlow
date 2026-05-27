@@ -30,12 +30,13 @@ type Variation struct {
 }
 
 type FlagEnvState struct {
-	EnvironmentID    int64  `json:"environment_id"`
-	EnvironmentName  string `json:"environment_name"`
-	EnvironmentKey   string `json:"environment_key"`
-	Protected        bool   `json:"protected"`
-	Enabled          bool   `json:"enabled"`
-	DefaultVariation int    `json:"default_variation"`
+	EnvironmentID    int64           `json:"environment_id"`
+	EnvironmentName  string          `json:"environment_name"`
+	EnvironmentKey   string          `json:"environment_key"`
+	Protected        bool            `json:"protected"`
+	Enabled          bool            `json:"enabled"`
+	DefaultVariation int             `json:"default_variation"`
+	Rules            json.RawMessage `json:"rules"`
 }
 
 // FlagResponse is the API shape — expands the raw DB model with parsed variations
@@ -122,16 +123,21 @@ func (h *handler) ListFlags(c *fiber.Ctx) error {
 		type feState struct {
 			enabled          bool
 			defaultVariation int
+			rules            string
 		}
 		feMap := make(map[feKey]feState)
 		for _, fe := range flagEnvs {
-			feMap[feKey{fe.FlagID, fe.EnvironmentID}] = feState{fe.Enabled, fe.DefaultVariation}
+			feMap[feKey{fe.FlagID, fe.EnvironmentID}] = feState{fe.Enabled, fe.DefaultVariation, fe.Rules}
 		}
 
 		for i, flag := range flags {
 			states := make([]FlagEnvState, len(envs))
 			for j, env := range envs {
 				s := feMap[feKey{flag.ID, env.ID}]
+				rules := json.RawMessage(`[]`)
+				if s.rules != "" {
+					rules = json.RawMessage(s.rules)
+				}
 				states[j] = FlagEnvState{
 					EnvironmentID:    env.ID,
 					EnvironmentName:  env.Name,
@@ -139,6 +145,7 @@ func (h *handler) ListFlags(c *fiber.Ctx) error {
 					Protected:        env.Protected,
 					Enabled:          s.enabled,
 					DefaultVariation: s.defaultVariation,
+					Rules:            rules,
 				}
 			}
 			result[i] = parseFlagResponse(flag, states)
@@ -417,4 +424,58 @@ func (h *handler) DeleteFlag(c *fiber.Ctx) error {
 	})
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+type saveRulesRequest struct {
+	EnvironmentID int64           `json:"environment_id"`
+	Rules         json.RawMessage `json:"rules"`
+}
+
+func (h *handler) SaveFlagRules(c *fiber.Ctx) error {
+	pid, err := strconv.ParseInt(c.Params("pid"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
+	}
+	if err := h.checkProjectAccess(c, pid); err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	var flag db.Flag
+	if err := h.db.NewSelect().Model(&flag).Where("project_id = ? AND key = ?", pid, c.Params("key")).Scan(ctx); err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "flag not found"})
+	}
+
+	var req saveRulesRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
+	}
+
+	rulesJSON := string(req.Rules)
+	if rulesJSON == "" {
+		rulesJSON = "[]"
+	}
+
+	var env db.Environment
+	if err := h.db.NewSelect().Model(&env).Where("id = ?", req.EnvironmentID).Scan(ctx); err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "environment not found"})
+	}
+
+	var fe db.FlagEnvironment
+	if err := h.db.NewSelect().Model(&fe).Where("flag_id = ? AND environment_id = ?", flag.ID, req.EnvironmentID).Scan(ctx); err != nil {
+		fe = db.FlagEnvironment{FlagID: flag.ID, EnvironmentID: req.EnvironmentID, Rules: rulesJSON}
+		_, _ = h.db.NewInsert().Model(&fe).Exec(ctx)
+	} else {
+		oldRules := fe.Rules
+		fe.Rules = rulesJSON
+		_, _ = h.db.NewUpdate().Model(&fe).Column("rules").Where("id = ?", fe.ID).Exec(ctx)
+
+		h.writeAudit(pid, h.actorName(c), "flag.rules_updated", flag.Key,
+			toJSON(map[string]any{"env": env.Name, "rules": oldRules}),
+			toJSON(map[string]any{"env": env.Name, "rules": rulesJSON}))
+	}
+
+	h.broker.Publish(stream.Event{ProjectID: pid, EnvKey: env.Key, FlagKey: flag.Key, Action: "updated"})
+
+	return c.JSON(fiber.Map{"ok": true})
 }

@@ -52,6 +52,7 @@ func Register(app *fiber.App, database *bun.DB, broker *stream.Broker) {
 	flagsWrite.Post("/", h.CreateFlag)
 	flagsWrite.Patch("/:key", h.UpdateFlag)
 	flagsWrite.Patch("/:key/env", h.ToggleFlagEnv)
+	flagsWrite.Put("/:key/rules", h.SaveFlagRules)
 	flagsWrite.Delete("/:key", h.DeleteFlag)
 
 	// Project + environment write ops — Owner and above

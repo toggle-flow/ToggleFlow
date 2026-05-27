@@ -3,6 +3,29 @@ import { useToastStore } from '@/stores/toast'
 
 export type FlagType = 'boolean' | 'string' | 'number' | 'json'
 
+export type ConditionOperator =
+  | 'in'
+  | 'notIn'
+  | 'contains'
+  | 'startsWith'
+  | 'endsWith'
+  | 'equals'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+
+export interface Condition {
+  attribute: string
+  operator: ConditionOperator
+  values: (string | number)[]
+}
+
+export interface Rule {
+  conditions: Condition[]
+  serve: number | null
+}
+
 export interface Variation {
   name: string
   value: boolean | string | number | Record<string, unknown>
@@ -15,6 +38,7 @@ export interface FlagEnvState {
   protected: boolean
   enabled: boolean
   default_variation: number
+  rules: Rule[]
 }
 
 export interface Flag {
@@ -71,6 +95,16 @@ export const flagsApi = {
       })
       .then((r) => {
         useToastStore().show(enabled ? 'enabled flag' : 'disabled flag')
+        return r
+      }),
+  saveRules: (projectId: number, flagKey: string, environmentId: number, rules: Rule[]) =>
+    api
+      .put<{ ok: boolean }>(`/projects/${projectId}/flags/${flagKey}/rules`, {
+        environment_id: environmentId,
+        rules,
+      })
+      .then((r) => {
+        useToastStore().show('saved rules')
         return r
       }),
   delete: (projectId: number, flagKey: string) =>

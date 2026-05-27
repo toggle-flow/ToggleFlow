@@ -113,6 +113,7 @@
     "deleteConfirmCountdown": "Flag löschen ({countdown}s)",
     "history": "Flag-Verlauf",
     "historyTitle": "Flag-Verlauf",
+    "rules": "Regeln",
     "types": {
       "boolean": "Boolean",
       "string": "String",
@@ -269,6 +270,30 @@
     "sdkSectionDescription": "Authentifizieren Sie Ihre serverseitigen SDK-Clients pro Umgebung",
     "apiSection": "API-Schlüssel",
     "apiSectionDescription": "Programmatischer Zugriff zur Verwaltung von Flags in diesem Projekt"
+  },
+  "rules": {
+    "title": "Targeting-Regeln",
+    "description": "Regeln werden von oben nach unten ausgewertet. Die erste Übereinstimmung gewinnt.",
+    "empty": "Noch keine Regeln — alle Benutzer erhalten die Standard-Variation.",
+    "rule": "Regel",
+    "attribute": "Attribut",
+    "opGroupString": "Zeichenkette",
+    "opEquals": "gleich",
+    "opIn": "ist eines von",
+    "opNotIn": "ist keines von",
+    "opContains": "enthält",
+    "opStartsWith": "beginnt mit",
+    "opEndsWith": "endet mit",
+    "opGroupNumeric": "Numerisch",
+    "tagPlaceholder": "eingeben + Enter",
+    "value": "Wert",
+    "addCondition": "Bedingung hinzufügen",
+    "serve": "Ausliefern",
+    "addRule": "Regel hinzufügen",
+    "saving": "Wird gespeichert...",
+    "save": "Regeln speichern",
+    "errorAttribute": "Alle Bedingungen müssen ein Attribut haben.",
+    "errorValue": "Alle Bedingungen müssen mindestens einen Wert haben."
   },
   "common": {
     "cancel": "Abbrechen",
