@@ -149,7 +149,10 @@
     "deleteConfirmButton": "Delete environment",
     "deleteConfirmCountdown": "Delete environment ({countdown}s)",
     "history": "Environment history",
-    "historyTitle": "Environment history"
+    "historyTitle": "Environment history",
+    "statKeys": "keys",
+    "statActive": "active",
+    "statFlags": "flags"
   },
   "audit": {
     "title": "Audit Log",

@@ -97,50 +97,19 @@
               </div>
             </div>
 
-            <!-- SDK Keys -->
-            <div class="space-y-1.5 pt-1">
-              <div class="flex items-center justify-between">
-                <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {{ $t('environments.sdkKey') }}
-                </p>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="h-6 px-2 text-xs"
-                  @click="openCreateSDKKey(env)"
-                >
-                  <Plus class="size-3 mr-1" />{{ $t('keys.add') }}
-                </Button>
+            <!-- Stats -->
+            <div class="flex items-center gap-3 pt-1 border-t">
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <KeyRound class="size-3.5 shrink-0" />
+                <span>{{ sdkKeys[env.id]?.length ?? '—' }} {{ $t('environments.statKeys') }}</span>
               </div>
-              <div v-if="!sdkKeys[env.id]" class="text-xs text-muted-foreground italic">
-                {{ $t('keys.loading') }}
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <ShieldCheck class="size-3.5 shrink-0" />
+                <span>{{ activeKeyCount(env.id) }} {{ $t('environments.statActive') }}</span>
               </div>
-              <div
-                v-else-if="sdkKeys[env.id].length === 0"
-                class="text-xs text-muted-foreground italic"
-              >
-                {{ $t('keys.noKeys') }}
-              </div>
-              <div v-for="k in sdkKeys[env.id]" :key="k.id" class="flex items-center gap-2">
-                <div
-                  class="flex-1 min-w-0 rounded-md border bg-muted/40 px-3 py-1.5 flex items-center gap-2"
-                >
-                  <span class="text-xs font-medium truncate">{{ k.label }}</span>
-                  <span class="font-mono text-[11px] text-muted-foreground truncate"
-                    >{{ k.key_prefix }}...</span
-                  >
-                  <span v-if="k.expires_at" class="text-[10px] text-muted-foreground shrink-0">
-                    exp {{ formatDate(k.expires_at) }}
-                  </span>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="shrink-0 text-muted-foreground hover:text-destructive"
-                  @click="deleteSDKKey(env, k)"
-                >
-                  <Trash2 class="size-3.5" />
-                </Button>
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Flag class="size-3.5 shrink-0" />
+                <span>{{ flagTotal }} {{ $t('environments.statFlags') }}</span>
               </div>
             </div>
           </div>
@@ -177,33 +146,32 @@
     :title="$t('environments.historyTitle')"
     :label="historyTarget.key"
   />
-  <CreateKeyDialog
-    v-if="projectStore.current && createKeyEnv"
-    v-model:open="createKeyOpen"
-    :title="$t('keys.createSdkTitle')"
-    :description="$t('keys.createSdkDescription')"
-    :on-create="
-      (label, expiresAt) =>
-        environmentsApi.sdkKeys
-          .create(projectStore.current!.id, createKeyEnv!.id, label, expiresAt)
-          .then((r) => r.key)
-    "
-    @created="onSDKKeyCreated"
-  />
 </template>
 
 <script setup lang="ts">
 import { ref, watch, reactive } from 'vue'
-import { Globe, Plus, FolderOpen, Loader2, Pencil, Trash2, Lock, History } from '@lucide/vue'
+import {
+  Globe,
+  Plus,
+  FolderOpen,
+  Loader2,
+  Pencil,
+  Trash2,
+  Lock,
+  History,
+  KeyRound,
+  ShieldCheck,
+  Flag,
+} from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useProjectStore } from '@/stores/project'
 import { environmentsApi, type Environment, type SDKKeyRecord } from '@/api/environments'
+import { flagsApi } from '@/api/flags'
 import CreateEnvironmentDialog from '@/components/CreateEnvironmentDialog.vue'
 import EditEnvironmentDialog from '@/components/EditEnvironmentDialog.vue'
 import DeleteEnvironmentDialog from '@/components/DeleteEnvironmentDialog.vue'
 import AuditHistorySheet from '@/components/AuditHistorySheet.vue'
-import CreateKeyDialog from '@/components/CreateKeyDialog.vue'
 import { Tooltip } from '@/components/ui/tooltip'
 import CopyKey from '@/components/CopyKey.vue'
 
@@ -218,15 +186,19 @@ const deleteTarget = ref<Environment | null>(null)
 const historyOpen = ref(false)
 const historyTarget = ref<Environment | null>(null)
 const sdkKeys = reactive<Record<number, SDKKeyRecord[]>>({})
-const createKeyOpen = ref(false)
-const createKeyEnv = ref<Environment | null>(null)
+const flagTotal = ref<number | string>('—')
 
 async function load() {
   if (!projectStore.current) return
   loading.value = true
   try {
     const pid = projectStore.current.id
-    environments.value = (await environmentsApi.list(pid)).data ?? []
+    const [envsResult, flagsResult] = await Promise.all([
+      environmentsApi.list(pid),
+      flagsApi.list(pid, { page: 1, page_size: 1 }),
+    ])
+    environments.value = envsResult.data ?? []
+    flagTotal.value = flagsResult.total
     for (const env of environments.value) {
       loadSDKKeys(pid, env.id)
     }
@@ -237,6 +209,13 @@ async function load() {
 
 async function loadSDKKeys(pid: number, eid: number) {
   sdkKeys[eid] = (await environmentsApi.sdkKeys.list(pid, eid)) as SDKKeyRecord[]
+}
+
+function activeKeyCount(envId: number): number | string {
+  const keys = sdkKeys[envId]
+  if (!keys) return '—'
+  const now = Date.now()
+  return keys.filter((k) => !k.expires_at || new Date(k.expires_at).getTime() > now).length
 }
 
 watch(() => projectStore.current, load, { immediate: true })
@@ -268,31 +247,5 @@ function onUpdated(updated: Environment) {
 
 function onDeleted(env: Environment) {
   environments.value = environments.value.filter((e) => e.id !== env.id)
-}
-
-function openCreateSDKKey(env: Environment) {
-  createKeyEnv.value = env
-  createKeyOpen.value = true
-}
-
-async function deleteSDKKey(env: Environment, key: SDKKeyRecord) {
-  if (!projectStore.current) return
-  await environmentsApi.sdkKeys.delete(projectStore.current.id, env.id, key.id)
-  if (sdkKeys[env.id]) {
-    sdkKeys[env.id] = sdkKeys[env.id].filter((k) => k.id !== key.id)
-  }
-}
-
-function onSDKKeyCreated() {
-  if (!projectStore.current || !createKeyEnv.value) return
-  loadSDKKeys(projectStore.current.id, createKeyEnv.value.id)
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 </script>

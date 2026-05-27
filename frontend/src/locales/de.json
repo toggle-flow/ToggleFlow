@@ -149,7 +149,10 @@
     "deleteConfirmButton": "Umgebung löschen",
     "deleteConfirmCountdown": "Umgebung löschen ({countdown}s)",
     "history": "Umgebungsverlauf",
-    "historyTitle": "Umgebungsverlauf"
+    "historyTitle": "Umgebungsverlauf",
+    "statKeys": "Schlüssel",
+    "statActive": "aktiv",
+    "statFlags": "Flags"
   },
   "audit": {
     "title": "Audit-Protokoll",
