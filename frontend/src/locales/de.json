@@ -41,7 +41,7 @@
     "administration": "Administration",
     "users": "Benutzer",
     "signOut": "Abmelden",
-    "apiKeys": "API-Schlüssel"
+    "apiKeys": "Schlüssel"
   },
   "roles": {
     "superuser": "Superuser",
@@ -263,8 +263,12 @@
     "createSdkDescription": "SDK-Schlüssel authentifizieren Ihre serverseitigen SDK-Clients gegenüber dieser Umgebung.",
     "createApiTitle": "API-Schlüssel erstellen",
     "createApiDescription": "API-Schlüssel ermöglichen programmatischen Zugriff zur Verwaltung von Flags in diesem Projekt.",
-    "apiKeysTitle": "API-Schlüssel",
-    "apiKeysSubtitle": "Programmatischen Zugriff auf dieses Projekt verwalten"
+    "pageTitle": "Schlüssel",
+    "pageSubtitle": "SDK- und API-Schlüssel für dieses Projekt verwalten",
+    "sdkSection": "SDK-Schlüssel",
+    "sdkSectionDescription": "Authentifizieren Sie Ihre serverseitigen SDK-Clients pro Umgebung",
+    "apiSection": "API-Schlüssel",
+    "apiSectionDescription": "Programmatischer Zugriff zur Verwaltung von Flags in diesem Projekt"
   },
   "common": {
     "cancel": "Abbrechen",

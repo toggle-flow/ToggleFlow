@@ -13,55 +13,130 @@
 
     <template v-else>
       <div class="shrink-0 space-y-4 px-6 pt-6 pb-4">
-        <div class="flex items-center justify-between">
-          <div class="space-y-0.5">
-            <h1 class="text-base font-semibold">{{ $t('keys.apiKeysTitle') }}</h1>
-            <p class="text-sm text-muted-foreground">{{ $t('keys.apiKeysSubtitle') }}</p>
-          </div>
-          <Button size="sm" @click="createOpen = true">
-            <Plus class="size-3.5" />
-            {{ $t('keys.add') }}
-          </Button>
+        <div class="space-y-0.5">
+          <h1 class="text-base font-semibold">{{ $t('keys.pageTitle') }}</h1>
+          <p class="text-sm text-muted-foreground">{{ $t('keys.pageSubtitle') }}</p>
         </div>
         <Separator />
       </div>
 
       <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
-        <div v-if="loading" class="flex h-full items-center justify-center">
+        <div v-if="loading" class="flex h-32 items-center justify-center">
           <Loader2 class="size-6 animate-spin text-muted-foreground/40" />
         </div>
 
-        <div
-          v-else-if="keys.length === 0"
-          class="flex h-full flex-col items-center justify-center text-center"
-        >
-          <KeyRound class="size-8 text-muted-foreground/30 mb-3" />
-          <p class="text-sm font-medium">{{ $t('keys.noKeys') }}</p>
-        </div>
+        <div v-else class="space-y-8">
+          <!-- SDK Keys -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-0.5">
+                <h2 class="text-sm font-semibold">{{ $t('keys.sdkSection') }}</h2>
+                <p class="text-xs text-muted-foreground">{{ $t('keys.sdkSectionDescription') }}</p>
+              </div>
+            </div>
 
-        <div v-else class="space-y-2">
-          <div
-            v-for="k in keys"
-            :key="k.id"
-            class="rounded-lg border bg-card px-4 py-3 flex items-center gap-3"
-          >
-            <div class="flex-1 min-w-0 space-y-0.5">
-              <p class="text-sm font-medium">{{ k.label }}</p>
-              <p class="text-xs font-mono text-muted-foreground">{{ k.key_prefix }}...</p>
+            <div v-if="environments.length === 0" class="text-sm text-muted-foreground italic">
+              {{ $t('environments.emptyTitle') }}
             </div>
-            <div class="text-right text-xs text-muted-foreground space-y-0.5 shrink-0">
-              <p>
-                {{ $t('keys.expiry') }}:
-                {{ k.expires_at ? formatDate(k.expires_at) : $t('keys.expiryNever') }}
-              </p>
-              <p>{{ formatDate(k.created_at) }}</p>
+
+            <div v-else class="space-y-3">
+              <div
+                v-for="env in environments"
+                :key="env.id"
+                class="rounded-lg border bg-card p-4 space-y-3"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium">{{ env.name }}</p>
+                    <CopyKey :value="env.key" />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    class="h-7 px-2 text-xs"
+                    @click="openCreateSDKKey(env)"
+                  >
+                    <Plus class="size-3 mr-1" />{{ $t('keys.add') }}
+                  </Button>
+                </div>
+
+                <div v-if="!sdkKeys[env.id]" class="text-xs text-muted-foreground italic">
+                  {{ $t('keys.loading') }}
+                </div>
+                <div
+                  v-else-if="sdkKeys[env.id].length === 0"
+                  class="text-xs text-muted-foreground italic"
+                >
+                  {{ $t('keys.noKeys') }}
+                </div>
+                <div v-else class="space-y-1.5">
+                  <div v-for="k in sdkKeys[env.id]" :key="k.id" class="flex items-center gap-2">
+                    <div
+                      class="flex-1 min-w-0 rounded-md border bg-muted/40 px-3 py-1.5 flex items-center gap-3"
+                    >
+                      <span class="text-xs font-medium truncate">{{ k.label }}</span>
+                      <span class="font-mono text-[11px] text-muted-foreground"
+                        >{{ k.key_prefix }}...</span
+                      >
+                      <span class="ml-auto text-[10px] text-muted-foreground shrink-0">
+                        {{ k.expires_at ? formatDate(k.expires_at) : $t('keys.expiryNever') }}
+                      </span>
+                    </div>
+                    <button
+                      class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      @click="deleteSDKKey(env, k)"
+                    >
+                      <Trash2 class="size-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <button
-              class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-              @click="deleteKey(k)"
-            >
-              <Trash2 class="size-3.5" />
-            </button>
+          </div>
+
+          <Separator />
+
+          <!-- API Keys -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-0.5">
+                <h2 class="text-sm font-semibold">{{ $t('keys.apiSection') }}</h2>
+                <p class="text-xs text-muted-foreground">{{ $t('keys.apiSectionDescription') }}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                class="h-7 px-2 text-xs"
+                @click="createApiOpen = true"
+              >
+                <Plus class="size-3 mr-1" />{{ $t('keys.add') }}
+              </Button>
+            </div>
+
+            <div v-if="apiKeys.length === 0" class="text-sm text-muted-foreground italic">
+              {{ $t('keys.noKeys') }}
+            </div>
+            <div v-else class="space-y-1.5">
+              <div v-for="k in apiKeys" :key="k.id" class="flex items-center gap-2">
+                <div
+                  class="flex-1 min-w-0 rounded-md border bg-muted/40 px-3 py-1.5 flex items-center gap-3"
+                >
+                  <span class="text-xs font-medium truncate">{{ k.label }}</span>
+                  <span class="font-mono text-[11px] text-muted-foreground"
+                    >{{ k.key_prefix }}...</span
+                  >
+                  <span class="ml-auto text-[10px] text-muted-foreground shrink-0">
+                    {{ k.expires_at ? formatDate(k.expires_at) : $t('keys.expiryNever') }}
+                  </span>
+                </div>
+                <button
+                  class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  @click="deleteAPIKey(k)"
+                >
+                  <Trash2 class="size-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -69,8 +144,21 @@
   </div>
 
   <CreateKeyDialog
+    v-if="projectStore.current && createSdkEnv"
+    v-model:open="createSdkOpen"
+    :title="$t('keys.createSdkTitle')"
+    :description="$t('keys.createSdkDescription')"
+    :on-create="
+      (label, expiresAt) =>
+        environmentsApi.sdkKeys
+          .create(projectStore.current!.id, createSdkEnv!.id, label, expiresAt)
+          .then((r) => r.key)
+    "
+    @created="onSDKKeyCreated"
+  />
+  <CreateKeyDialog
     v-if="projectStore.current"
-    v-model:open="createOpen"
+    v-model:open="createApiOpen"
     :title="$t('keys.createApiTitle')"
     :description="$t('keys.createApiDescription')"
     :on-create="
@@ -79,41 +167,85 @@
           .create(projectStore.current!.id, label, expiresAt)
           .then((r) => r.key)
     "
-    @created="load"
+    @created="loadAPIKeys"
   />
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { FolderOpen, Plus, Loader2, Trash2, KeyRound } from '@lucide/vue'
+import { ref, watch, reactive } from 'vue'
+import { FolderOpen, Plus, Loader2, Trash2 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useProjectStore } from '@/stores/project'
-import { environmentsApi, type APIKeyRecord } from '@/api/environments'
+import {
+  environmentsApi,
+  type Environment,
+  type SDKKeyRecord,
+  type APIKeyRecord,
+} from '@/api/environments'
 import CreateKeyDialog from '@/components/CreateKeyDialog.vue'
+import CopyKey from '@/components/CopyKey.vue'
 
 const projectStore = useProjectStore()
-const keys = ref<APIKeyRecord[]>([])
+const environments = ref<Environment[]>([])
+const sdkKeys = reactive<Record<number, SDKKeyRecord[]>>({})
+const apiKeys = ref<APIKeyRecord[]>([])
 const loading = ref(false)
-const createOpen = ref(false)
+const createSdkOpen = ref(false)
+const createSdkEnv = ref<Environment | null>(null)
+const createApiOpen = ref(false)
 
 async function load() {
   if (!projectStore.current) return
   loading.value = true
   try {
-    keys.value = ((await environmentsApi.apiKeys.list(projectStore.current.id)) ??
-      []) as APIKeyRecord[]
+    const pid = projectStore.current.id
+    const [envsResult, keys] = await Promise.all([
+      environmentsApi.list(pid),
+      environmentsApi.apiKeys.list(pid),
+    ])
+    environments.value = envsResult.data ?? []
+    apiKeys.value = (keys ?? []) as APIKeyRecord[]
+    for (const env of environments.value) {
+      loadSDKKeys(pid, env.id)
+    }
   } finally {
     loading.value = false
   }
 }
 
+async function loadSDKKeys(pid: number, eid: number) {
+  sdkKeys[eid] = ((await environmentsApi.sdkKeys.list(pid, eid)) ?? []) as SDKKeyRecord[]
+}
+
+async function loadAPIKeys() {
+  if (!projectStore.current) return
+  apiKeys.value = ((await environmentsApi.apiKeys.list(projectStore.current.id)) ??
+    []) as APIKeyRecord[]
+}
+
 watch(() => projectStore.current, load, { immediate: true })
 
-async function deleteKey(k: APIKeyRecord) {
+function openCreateSDKKey(env: Environment) {
+  createSdkEnv.value = env
+  createSdkOpen.value = true
+}
+
+function onSDKKeyCreated() {
+  if (!projectStore.current || !createSdkEnv.value) return
+  loadSDKKeys(projectStore.current.id, createSdkEnv.value.id)
+}
+
+async function deleteSDKKey(env: Environment, key: SDKKeyRecord) {
   if (!projectStore.current) return
-  await environmentsApi.apiKeys.delete(projectStore.current.id, k.id)
-  keys.value = keys.value.filter((x) => x.id !== k.id)
+  await environmentsApi.sdkKeys.delete(projectStore.current.id, env.id, key.id)
+  sdkKeys[env.id] = sdkKeys[env.id].filter((k) => k.id !== key.id)
+}
+
+async function deleteAPIKey(key: APIKeyRecord) {
+  if (!projectStore.current) return
+  await environmentsApi.apiKeys.delete(projectStore.current.id, key.id)
+  apiKeys.value = apiKeys.value.filter((k) => k.id !== key.id)
 }
 
 function formatDate(iso: string) {

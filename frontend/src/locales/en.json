@@ -41,7 +41,7 @@
     "administration": "Administration",
     "users": "Users",
     "signOut": "Sign out",
-    "apiKeys": "API Keys"
+    "apiKeys": "Keys"
   },
   "roles": {
     "superuser": "Superuser",
@@ -263,8 +263,12 @@
     "createSdkDescription": "SDK keys authenticate your server-side SDK clients against this environment.",
     "createApiTitle": "Create API key",
     "createApiDescription": "API keys allow programmatic access to manage flags in this project.",
-    "apiKeysTitle": "API Keys",
-    "apiKeysSubtitle": "Manage programmatic access to this project"
+    "pageTitle": "Keys",
+    "pageSubtitle": "Manage SDK and API keys for this project",
+    "sdkSection": "SDK Keys",
+    "sdkSectionDescription": "Authenticate your server-side SDK clients per environment",
+    "apiSection": "API Keys",
+    "apiSectionDescription": "Programmatic access to create and manage flags in this project"
   },
   "common": {
     "cancel": "Cancel",
