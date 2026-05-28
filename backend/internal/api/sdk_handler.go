@@ -164,17 +164,47 @@ func (h *handler) SDKEvaluate(c *fiber.Ctx) error {
 	}
 
 	ctx := context.Background()
-	var flag db.Flag
-	if err := h.db.NewSelect().Model(&flag).Where("project_id = ? AND key = ?", env.ProjectID, req.FlagKey).Scan(ctx); err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "flag not found"})
-	}
-
-	var fe db.FlagEnvironment
-	_ = h.db.NewSelect().Model(&fe).Where("flag_id = ? AND environment_id = ?", flag.ID, env.ID).Scan(ctx)
 
 	var variations []Variation
-	if flag.Variations != "" && flag.Variations != "[]" {
-		_ = json.Unmarshal([]byte(flag.Variations), &variations)
+	var enabled bool
+	var defaultVariation int
+	var rulesJSON string
+	found := false
+
+	if cached := h.cache.get(env.ProjectID, env.ID); cached != nil {
+		var configs []SDKFlagConfig
+		if json.Unmarshal(cached, &configs) == nil {
+			for _, cfg := range configs {
+				if cfg.Key == req.FlagKey {
+					variations = cfg.Variations
+					enabled = cfg.Enabled
+					defaultVariation = cfg.DefaultVariation
+					if cfg.Rules != nil {
+						rulesJSON = string(cfg.Rules)
+					}
+					found = true
+					break
+				}
+			}
+			if !found {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "flag not found"})
+			}
+		}
+	}
+
+	if !found {
+		var flag db.Flag
+		if err := h.db.NewSelect().Model(&flag).Where("project_id = ? AND key = ?", env.ProjectID, req.FlagKey).Scan(ctx); err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "flag not found"})
+		}
+		var fe db.FlagEnvironment
+		_ = h.db.NewSelect().Model(&fe).Where("flag_id = ? AND environment_id = ?", flag.ID, env.ID).Scan(ctx)
+		if flag.Variations != "" && flag.Variations != "[]" {
+			_ = json.Unmarshal([]byte(flag.Variations), &variations)
+		}
+		enabled = fe.Enabled
+		defaultVariation = fe.DefaultVariation
+		rulesJSON = fe.Rules
 	}
 
 	var dbSegments []db.Segment
@@ -189,13 +219,13 @@ func (h *handler) SDKEvaluate(c *fiber.Ctx) error {
 	}
 
 	variationIdx := eval.Evaluate(eval.EvalInput{
-		FlagKey:          flag.Key,
+		FlagKey:          req.FlagKey,
 		UserKey:          req.UserKey,
 		UserCtx:          req.Context,
-		Enabled:          fe.Enabled,
+		Enabled:          enabled,
 		Variations:       len(variations),
-		DefaultVariation: fe.DefaultVariation,
-		RulesJSON:        fe.Rules,
+		DefaultVariation: defaultVariation,
+		RulesJSON:        rulesJSON,
 		Segments:         segments,
 	})
 
@@ -207,8 +237,8 @@ func (h *handler) SDKEvaluate(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(evaluateResponse{
-		FlagKey:        flag.Key,
-		Enabled:        fe.Enabled,
+		FlagKey:        req.FlagKey,
+		Enabled:        enabled,
 		VariationIndex: variationIdx,
 		VariationValue: value,
 	})
@@ -220,7 +250,7 @@ func (h *handler) SDKStream(c *fiber.Ctx) error {
 		return nil
 	}
 
-	ch := h.broker.Subscribe()
+	ch := h.broker.Subscribe(env.ProjectID)
 
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
@@ -232,7 +262,7 @@ func (h *handler) SDKStream(c *fiber.Ctx) error {
 	// This is the Fiber-idiomatic way to do SSE — similar to using res.write() in an
 	// Express endpoint that never calls res.end().
 	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
-		defer h.broker.Unsubscribe(ch)
+		defer h.broker.Unsubscribe(env.ProjectID, ch)
 
 		_, _ = fmt.Fprintf(w, "data: {\"type\":\"connected\"}\n\n")
 		_ = w.Flush()
@@ -251,9 +281,6 @@ func (h *handler) SDKStream(c *fiber.Ctx) error {
 			case event, ok := <-ch:
 				if !ok {
 					return
-				}
-				if event.ProjectID != env.ProjectID {
-					continue
 				}
 				payload, _ := json.Marshal(map[string]any{
 					"type":    "flag." + event.Action,

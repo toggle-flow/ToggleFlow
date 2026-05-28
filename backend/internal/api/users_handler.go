@@ -96,7 +96,8 @@ func (h *handler) CreateUser(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to create user"})
 	}
 
-	h.writeAudit(0, h.actorName(c), "user.created", user.Email, "",
+	actor := h.actorName(c)
+	go h.writeAudit(0, actor, "user.created", user.Email, "",
 		toJSON(map[string]any{"name": user.Name, "email": user.Email, "role": string(user.Role)}))
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -166,7 +167,8 @@ func (h *handler) UpdateUser(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update user"})
 	}
 
-	h.writeAudit(0, h.actorName(c), "user.updated", target.Email,
+	actor := h.actorName(c)
+	go h.writeAudit(0, actor, "user.updated", target.Email,
 		toJSON(map[string]any{"name": oldName, "email": oldEmail, "role": string(oldRole)}),
 		toJSON(map[string]any{"name": target.Name, "email": target.Email, "role": string(target.Role)}))
 
@@ -301,7 +303,8 @@ func (h *handler) DeleteUser(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to delete user"})
 	}
 
-	h.writeAudit(0, h.actorName(c), "user.deleted", target.Email,
+	actor := h.actorName(c)
+	go h.writeAudit(0, actor, "user.deleted", target.Email,
 		toJSON(map[string]any{"name": target.Name, "email": target.Email, "role": string(target.Role)}), "")
 
 	return c.SendStatus(fiber.StatusNoContent)

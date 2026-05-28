@@ -10,41 +10,49 @@ type Event struct {
 	Action    string `json:"action"` // "updated" | "deleted"
 }
 
-// Broker is an in-process pub/sub hub. Think of it as Node's EventEmitter
-// but designed for concurrent goroutines — each subscriber gets its own channel
-// and the broker fans out to all of them under a mutex.
+// Broker is an in-process pub/sub hub sharded by project ID.
+// Each project has its own subscriber set so a Publish for project A
+// only iterates project A's channels — not every connected SSE client.
 type Broker struct {
 	mu   sync.RWMutex
-	subs map[chan Event]struct{}
+	subs map[int64]map[chan Event]struct{}
 }
 
 func New() *Broker {
-	return &Broker{subs: make(map[chan Event]struct{})}
+	return &Broker{subs: make(map[int64]map[chan Event]struct{})}
 }
 
-// Subscribe returns a channel that will receive events. The caller must call
-// Unsubscribe with the same channel when done (e.g. when the HTTP connection closes).
-func (b *Broker) Subscribe() chan Event {
+// Subscribe returns a channel scoped to projectID. The caller must call
+// Unsubscribe with the same projectID and channel when done.
+func (b *Broker) Subscribe(projectID int64) chan Event {
 	ch := make(chan Event, 16)
 	b.mu.Lock()
-	b.subs[ch] = struct{}{}
+	if b.subs[projectID] == nil {
+		b.subs[projectID] = make(map[chan Event]struct{})
+	}
+	b.subs[projectID][ch] = struct{}{}
 	b.mu.Unlock()
 	return ch
 }
 
-func (b *Broker) Unsubscribe(ch chan Event) {
+func (b *Broker) Unsubscribe(projectID int64, ch chan Event) {
 	b.mu.Lock()
-	delete(b.subs, ch)
+	if subs, ok := b.subs[projectID]; ok {
+		delete(subs, ch)
+		if len(subs) == 0 {
+			delete(b.subs, projectID)
+		}
+	}
 	b.mu.Unlock()
 	close(ch)
 }
 
-// Publish fans out an event to every active subscriber.
+// Publish fans out an event only to subscribers of the same project.
 // Non-blocking send: if a subscriber's buffer is full we skip it rather than block.
 func (b *Broker) Publish(e Event) {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	for ch := range b.subs {
+	for ch := range b.subs[e.ProjectID] {
 		select {
 		case ch <- e:
 		default:

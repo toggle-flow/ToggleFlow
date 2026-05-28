@@ -243,7 +243,8 @@ func (h *handler) CreateFlag(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to create flag"})
 	}
 
-	h.writeAudit(pid, h.actorName(c), "flag.created", flag.Key, "",
+	actor := h.actorName(c)
+	go h.writeAudit(pid, actor, "flag.created", flag.Key, "",
 		toJSON(map[string]any{"name": flag.Name, "key": flag.Key, "type": flag.FlagType}))
 
 	// Seed flag_environment rows for every existing environment
@@ -308,7 +309,8 @@ func (h *handler) UpdateFlag(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update flag"})
 	}
 
-	h.writeAudit(pid, h.actorName(c), "flag.updated", flag.Key,
+	actor := h.actorName(c)
+	go h.writeAudit(pid, actor, "flag.updated", flag.Key,
 		toJSON(map[string]any{"name": oldName, "description": oldDesc}),
 		toJSON(map[string]any{"name": flag.Name, "description": flag.Description}))
 
@@ -367,7 +369,8 @@ func (h *handler) ToggleFlagEnv(c *fiber.Ctx) error {
 		_, _ = h.db.NewUpdate().Model(&fe).Column("enabled", "default_variation").Where("id = ?", fe.ID).Exec(ctx)
 	}
 
-	h.writeAudit(pid, h.actorName(c), "flag.toggled", flag.Key,
+	actor := h.actorName(c)
+	go h.writeAudit(pid, actor, "flag.toggled", flag.Key,
 		toJSON(map[string]any{"env": env.Name, "enabled": oldEnabled}),
 		toJSON(map[string]any{"env": env.Name, "enabled": req.Enabled}))
 
@@ -419,7 +422,8 @@ func (h *handler) DeleteFlag(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to delete flag"})
 	}
 
-	h.writeAudit(pid, h.actorName(c), "flag.deleted", flag.Key,
+	actor := h.actorName(c)
+	go h.writeAudit(pid, actor, "flag.deleted", flag.Key,
 		toJSON(map[string]any{"name": flag.Name, "key": flag.Key}), "")
 
 	h.broker.Publish(stream.Event{
@@ -476,7 +480,8 @@ func (h *handler) SaveFlagRules(c *fiber.Ctx) error {
 		fe.Rules = rulesJSON
 		_, _ = h.db.NewUpdate().Model(&fe).Column("rules").Where("id = ?", fe.ID).Exec(ctx)
 
-		h.writeAudit(pid, h.actorName(c), "flag.rules_updated", flag.Key,
+		actor := h.actorName(c)
+		go h.writeAudit(pid, actor, "flag.rules_updated", flag.Key,
 			toJSON(map[string]any{"env": env.Name, "rules": oldRules}),
 			toJSON(map[string]any{"env": env.Name, "rules": rulesJSON}))
 	}

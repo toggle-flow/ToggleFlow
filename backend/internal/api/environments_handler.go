@@ -104,7 +104,8 @@ func (h *handler) CreateEnvironment(c *fiber.Ctx) error {
 	}
 	_, _ = h.db.NewInsert().Model(sdkKeyRecord).Exec(ctx)
 
-	h.writeAudit(pid, h.actorName(c), "env.created", env.Key, "",
+	actor := h.actorName(c)
+	go h.writeAudit(pid, actor, "env.created", env.Key, "",
 		toJSON(map[string]any{"name": env.Name, "key": env.Key}))
 
 	return c.Status(fiber.StatusCreated).JSON(env)
@@ -155,7 +156,8 @@ func (h *handler) UpdateEnvironment(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update environment"})
 	}
 
-	h.writeAudit(env.ProjectID, h.actorName(c), "env.updated", env.Key,
+	actor := h.actorName(c)
+	go h.writeAudit(env.ProjectID, actor, "env.updated", env.Key,
 		toJSON(map[string]any{"name": oldName, "key": oldKey}),
 		toJSON(map[string]any{"name": env.Name, "key": env.Key}))
 
@@ -188,7 +190,8 @@ func (h *handler) DeleteEnvironment(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to delete environment"})
 	}
 
-	h.writeAudit(env.ProjectID, h.actorName(c), "env.deleted", env.Key,
+	actor := h.actorName(c)
+	go h.writeAudit(env.ProjectID, actor, "env.deleted", env.Key,
 		toJSON(map[string]any{"name": env.Name, "key": env.Key}), "")
 
 	return c.SendStatus(fiber.StatusNoContent)
