@@ -21,5 +21,10 @@ func Connect() (*bun.DB, error) {
 		return nil, err
 	}
 
+	// SQLite only has one writer at a time; cap pool so we don't queue up
+	// hundreds of connections all competing for the write lock.
+	sqldb.SetMaxOpenConns(10)
+	sqldb.SetMaxIdleConns(5)
+
 	return bun.NewDB(sqldb, sqlitedialect.New()), nil
 }

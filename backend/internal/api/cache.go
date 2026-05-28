@@ -1,6 +1,11 @@
 package api
 
-import "sync"
+import (
+	"sync"
+	"time"
+
+	"toggleflow/internal/db"
+)
 
 // flagCache is a two-level in-memory store: projectID → environmentID → JSON bytes.
 // Busted explicitly after any write that changes flag data for an environment.
@@ -47,4 +52,42 @@ func (c *flagCache) bustProject(projectID int64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.store, projectID)
+}
+
+// sdkKeyEntry caches a validated SDK key → environment mapping.
+// TTL is capped at the key's own expiry so we never serve an expired key from cache.
+type sdkKeyEntry struct {
+	env       *db.Environment
+	expiresAt time.Time
+}
+
+// sdkKeyCache maps hashed SDK key → cached environment, with a 5-minute TTL.
+type sdkKeyCache struct {
+	mu    sync.RWMutex
+	store map[string]sdkKeyEntry
+}
+
+func newSDKKeyCache() *sdkKeyCache {
+	return &sdkKeyCache{store: make(map[string]sdkKeyEntry)}
+}
+
+func (c *sdkKeyCache) get(keyHash string) *db.Environment {
+	c.mu.RLock()
+	entry, ok := c.store[keyHash]
+	c.mu.RUnlock()
+	if !ok || time.Now().After(entry.expiresAt) {
+		return nil
+	}
+	return entry.env
+}
+
+func (c *sdkKeyCache) set(keyHash string, env *db.Environment, keyExpiry *time.Time) {
+	ttl := time.Now().Add(5 * time.Minute)
+	// Never cache past the key's own expiry
+	if keyExpiry != nil && keyExpiry.Before(ttl) {
+		ttl = *keyExpiry
+	}
+	c.mu.Lock()
+	c.store[keyHash] = sdkKeyEntry{env: env, expiresAt: ttl}
+	c.mu.Unlock()
 }

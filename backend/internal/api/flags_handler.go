@@ -255,6 +255,9 @@ func (h *handler) CreateFlag(c *fiber.Ctx) error {
 		}
 	}
 
+	h.broker.Publish(stream.Event{ProjectID: pid, FlagKey: flag.Key, Action: "created"})
+	h.cache.bustProject(pid)
+
 	return c.Status(fiber.StatusCreated).JSON(parseFlagResponse(*flag, []FlagEnvState{}))
 }
 

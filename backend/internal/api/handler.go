@@ -48,13 +48,19 @@ func parsePage(c *fiber.Ctx) pageQuery {
 
 // handler holds shared dependencies — like a NestJS service injected into a controller.
 type handler struct {
-	db     *bun.DB
-	broker *stream.Broker
-	cache  *flagCache
+	db       *bun.DB
+	broker   *stream.Broker
+	cache    *flagCache
+	keyCache *sdkKeyCache
 }
 
 func newHandler(db *bun.DB, broker *stream.Broker) *handler {
-	return &handler{db: db, broker: broker, cache: newFlagCache()}
+	return &handler{
+		db:       db,
+		broker:   broker,
+		cache:    newFlagCache(),
+		keyCache: newSDKKeyCache(),
+	}
 }
 
 // requireAuth is a Fiber middleware that accepts either a JWT or a project-scoped API key.

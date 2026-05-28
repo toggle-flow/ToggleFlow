@@ -19,5 +19,10 @@ RUN go build -o toggleflow ./cmd/server
 FROM alpine:3.19
 WORKDIR /
 COPY --from=backend /app/toggleflow /toggleflow
+# Entrypoint raises the open-file limit before exec-ing the binary.
+# Alpine uses musl (no PAM), so limits.conf doesn't apply — ulimit in
+# the shell is the only reliable way to raise nofile inside the image.
+RUN printf '#!/bin/sh\nulimit -n 65536\nexec /toggleflow "$@"\n' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
 EXPOSE 8080
-ENTRYPOINT ["/toggleflow"]
+ENTRYPOINT ["/entrypoint.sh"]

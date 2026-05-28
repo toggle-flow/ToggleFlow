@@ -31,10 +31,17 @@ func (h *handler) sdkEnvironment(c *fiber.Ctx, sdkKey string) (*db.Environment, 
 		_ = c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "sdk_key is required"})
 		return nil, fiber.ErrUnauthorized
 	}
+
+	keyHash := hashKey(sdkKey)
+
+	if env := h.keyCache.get(keyHash); env != nil {
+		return env, nil
+	}
+
 	ctx := context.Background()
 	var key db.SDKKey
 	if err := h.db.NewSelect().Model(&key).
-		Where("key_hash = ?", hashKey(sdkKey)).
+		Where("key_hash = ?", keyHash).
 		Where("expires_at IS NULL OR expires_at > ?", time.Now()).
 		Scan(ctx); err != nil {
 		_ = c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid sdk_key"})
@@ -45,6 +52,8 @@ func (h *handler) sdkEnvironment(c *fiber.Ctx, sdkKey string) (*db.Environment, 
 		_ = c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid sdk_key"})
 		return nil, fiber.ErrUnauthorized
 	}
+
+	h.keyCache.set(keyHash, &env, key.ExpiresAt)
 	return &env, nil
 }
 
@@ -225,21 +234,24 @@ func (h *handler) SDKStream(c *fiber.Ctx) error {
 	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 		defer h.broker.Unsubscribe(ch)
 
-		// Send a connected heartbeat so the client knows the stream is live.
 		_, _ = fmt.Fprintf(w, "data: {\"type\":\"connected\"}\n\n")
 		_ = w.Flush()
 
 		done := c.Context().Done()
+		heartbeat := time.NewTicker(30 * time.Second)
+		defer heartbeat.Stop()
 
 		for {
 			select {
 			case <-done:
 				return
+			case <-heartbeat.C:
+				_, _ = fmt.Fprintf(w, ": ping\n\n")
+				_ = w.Flush()
 			case event, ok := <-ch:
 				if !ok {
 					return
 				}
-				// Only forward events for this environment's project.
 				if event.ProjectID != env.ProjectID {
 					continue
 				}
